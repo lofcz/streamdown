@@ -165,8 +165,10 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
@@ -393,8 +395,10 @@ export const Streamdown = memo(
     className,
     shikiTheme = defaultShikiTheme,
     mermaid,
+    codeBlockMaxHeight = 400,
     controls = true,
     isAnimating = false,
+    tableMaxHeight = 300,
     animated,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
@@ -599,6 +603,7 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
+        codeBlockMaxHeight,
         shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
         controls,
         isAnimating,
@@ -606,8 +611,10 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        tableMaxHeight,
       }),
       [
+        codeBlockMaxHeight,
         shikiTheme,
         controls,
         isAnimating,
@@ -616,6 +623,7 @@ export const Streamdown = memo(
         mermaid,
         linkSafety,
         plugins?.code,
+        tableMaxHeight,
       ]
     );
 

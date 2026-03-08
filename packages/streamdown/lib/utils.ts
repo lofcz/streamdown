@@ -3,6 +3,25 @@ import { twMerge } from 'tailwind-merge';
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
+/**
+ * Resolve a max-height prop to a CSS length string.
+ * `undefined`, non-finite numbers, and `<= 0` disable the constraint.
+ */
+export const resolveMaxHeight = (
+  maxHeight: number | string | undefined
+): string | undefined => {
+  if (maxHeight === undefined) {
+    return undefined;
+  }
+  if (typeof maxHeight === "number") {
+    if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
+      return undefined;
+    }
+    return `${maxHeight}px`;
+  }
+  return maxHeight;
+};
+
 export type CnFunction = (...inputs: ClassValue[]) => string;
 
 /**
