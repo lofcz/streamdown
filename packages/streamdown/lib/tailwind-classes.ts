@@ -160,6 +160,7 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
   "space-y-2",
   "space-y-4",
   "sticky",
+  "table-fixed",
   "supports-[backdrop-filter]:backdrop-blur",
   "supports-[backdrop-filter]:backdrop-blur-sm",
   "supports-[backdrop-filter]:bg-background/70",
