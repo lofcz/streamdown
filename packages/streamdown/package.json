@@ -1,5 +1,5 @@
 {
-  "name": "streamdown",
+  "name": "@lofcz/streamdown",
   "version": "2.5.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,8 +20,11 @@
   "homepage": "https://streamdown.ai",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown.git",
     "directory": "packages/streamdown"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",
@@ -37,9 +40,9 @@
   "license": "Apache-2.0",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "devDependencies": {
-    "@streamdown/cjk": "workspace:*",
-    "@streamdown/math": "workspace:*",
-    "@streamdown/mermaid": "workspace:*",
+    "@streamdown/cjk": "workspace:@lofcz/streamdown-cjk@*",
+    "@streamdown/math": "workspace:@lofcz/streamdown-math@*",
+    "@streamdown/mermaid": "workspace:@lofcz/streamdown-mermaid@*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/hast": "^3.0.4",
@@ -71,7 +74,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "remend": "workspace:*",
+    "remend": "workspace:@lofcz/remend@*",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
     "mermaid": "^11.12.2",
