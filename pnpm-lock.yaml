@@ -39,16 +39,16 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/react@19.2.8)(react@19.2.3)
       '@streamdown/cjk':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-cjk@*
         version: link:../../packages/streamdown-cjk
       '@streamdown/code':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-code@*
         version: link:../../packages/streamdown-code
       '@streamdown/math':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-math@*
         version: link:../../packages/streamdown-math
       '@streamdown/mermaid':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-mermaid@*
         version: link:../../packages/streamdown-mermaid
       ai:
         specifier: ^5.0.111
@@ -102,7 +102,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       streamdown:
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown@*
         version: link:../../packages/streamdown
       tailwind-merge:
         specifier: ^3.4.0
@@ -145,16 +145,16 @@ importers:
         specifier: ^3.1.16
         version: 3.1.18
       '@streamdown/cjk':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-cjk@*
         version: link:../../packages/streamdown-cjk
       '@streamdown/code':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-code@*
         version: link:../../packages/streamdown-code
       '@streamdown/math':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-math@*
         version: link:../../packages/streamdown-math
       '@streamdown/mermaid':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-mermaid@*
         version: link:../../packages/streamdown-mermaid
       '@vercel/analytics':
         specifier: ^1.6.1
@@ -241,7 +241,7 @@ importers:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       streamdown:
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown@*
         version: link:../../packages/streamdown
       tailwind-merge:
         specifier: ^3.4.0
@@ -347,7 +347,7 @@ importers:
         specifier: ^11.1.2
         version: 11.1.2
       remend:
-        specifier: workspace:*
+        specifier: workspace:@lofcz/remend@*
         version: link:../remend
       tailwind-merge:
         specifier: ^3.4.0
@@ -363,13 +363,13 @@ importers:
         version: 6.0.2
     devDependencies:
       '@streamdown/cjk':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-cjk@*
         version: link:../streamdown-cjk
       '@streamdown/math':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-math@*
         version: link:../streamdown-math
       '@streamdown/mermaid':
-        specifier: workspace:*
+        specifier: workspace:@lofcz/streamdown-mermaid@*
         version: link:../streamdown-mermaid
       '@testing-library/jest-dom':
         specifier: ^6.9.1

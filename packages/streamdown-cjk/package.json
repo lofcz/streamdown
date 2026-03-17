@@ -1,6 +1,6 @@
 {
-  "name": "@streamdown/cjk",
-  "version": "1.0.2",
+  "name": "@lofcz/streamdown-cjk",
+  "version": "1.0.3",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -44,7 +44,10 @@
   "description": "CJK text handling plugin for Streamdown",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown.git",
     "directory": "packages/streamdown-cjk"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

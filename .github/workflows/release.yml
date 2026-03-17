@@ -73,6 +73,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
+          NPM_CONFIG_PROVENANCE: "true"
 
       - name: Deploy to Vercel
         if: steps.changesets.outputs.published == 'true'

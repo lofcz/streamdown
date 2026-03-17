@@ -1,6 +1,6 @@
 {
-  "name": "@streamdown/code",
-  "version": "1.1.0",
+  "name": "@lofcz/streamdown-code",
+  "version": "1.1.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -36,7 +36,10 @@
   "description": "Shiki syntax highlighting plugin for Streamdown",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown.git",
     "directory": "packages/streamdown-code"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

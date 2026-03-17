@@ -1,5 +1,5 @@
 {
-  "name": "@streamdown/mermaid",
+  "name": "@lofcz/streamdown-mermaid",
   "version": "1.0.2",
   "type": "module",
   "main": "./dist/index.js",
@@ -37,7 +37,10 @@
   "description": "Mermaid diagram plugin for Streamdown",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown.git",
     "directory": "packages/streamdown-mermaid"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
