@@ -65,9 +65,3 @@ jobs:
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
           NPM_CONFIG_PROVENANCE: "true"
 
-      - name: Deploy to Vercel
-        if: steps.changesets.outputs.published == 'true'
-        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
