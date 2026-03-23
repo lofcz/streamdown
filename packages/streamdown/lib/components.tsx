@@ -192,13 +192,32 @@ type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => {
     const cn = useCn();
+
+    const childArray = Array.isArray(children)
+      ? children.filter((child) => child !== "\n" && child !== "")
+      : [children];
+
+    // Unwrap a single paragraph child (common for "loose" lists). Custom `p`
+    // components mean `type === "p"` is unreliable — also check hast tagName.
+    const soleChild = childArray[0];
+    const soleChildTag =
+      isValidElement(soleChild)
+        ? (soleChild.props as { node?: MarkdownNode }).node?.tagName
+        : undefined;
+    const normalizedChildren =
+      childArray.length === 1 &&
+      isValidElement(soleChild) &&
+      (soleChild.type === "p" || soleChildTag === "p")
+        ? (soleChild.props as { children?: LiProps["children"] }).children
+        : children;
+
     return (
       <li
         className={cn("py-1 [&>p]:inline", className)}
         data-streamdown="list-item"
         {...props}
       >
-        {children}
+        {normalizedChildren}
       </li>
     );
   },
