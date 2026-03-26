@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addXlinkNamespaceIfMissing,
+  getMermaidSvgSize,
+  normalizeMermaidInlineSvg,
   serializeSvgForDownload,
   svgToPngBlob,
 } from "../lib/mermaid/utils";
@@ -212,5 +214,49 @@ describe("addXlinkNamespaceIfMissing", () => {
       '<svg xmlns="http://www.w3.org/2000/svg"><a xlink:actuate="onRequest" xlink:title="link" /></svg>';
     const result = addXlinkNamespaceIfMissing(input);
     expect(result).toContain('xmlns:xlink="http://www.w3.org/1999/xlink"');
+  });
+});
+
+describe("normalizeMermaidInlineSvg", () => {
+  it("should preserve source when no SVG element exists", () => {
+    const input = "<div>not svg</div>";
+    expect(normalizeMermaidInlineSvg(input)).toBe(input);
+  });
+
+  it("should preserve source when viewBox is missing", () => {
+    const input = '<svg width="100%" height="100%"></svg>';
+    expect(normalizeMermaidInlineSvg(input)).toBe(input);
+  });
+
+  it("should normalize width/height/maxWidth from viewBox", () => {
+    const input =
+      '<svg width="100%" style="max-width: 3000px;" viewBox="0 0 3000 800"><text>Test</text></svg>';
+
+    const output = normalizeMermaidInlineSvg(input);
+    const doc = new DOMParser().parseFromString(output, "image/svg+xml");
+    const svg = doc.querySelector("svg");
+
+    expect(svg).toBeTruthy();
+    expect(svg?.getAttribute("width")).toBe("3000");
+    expect(svg?.getAttribute("height")).toBe("800");
+    const style = svg?.getAttribute("style") ?? "";
+    expect(style).toContain("width:3000px");
+    expect(style).toContain("height:800px");
+    expect(style).toContain("max-width:none");
+  });
+});
+
+describe("getMermaidSvgSize", () => {
+  it("should return null when svg is missing", () => {
+    expect(getMermaidSvgSize("<div></div>")).toBeNull();
+  });
+
+  it("should return null when viewBox is missing", () => {
+    expect(getMermaidSvgSize('<svg width="100%"></svg>')).toBeNull();
+  });
+
+  it("should parse width and height from viewBox", () => {
+    const size = getMermaidSvgSize('<svg viewBox="0 0 3400 1200"></svg>');
+    expect(size).toEqual({ height: 1200, width: 3400 });
   });
 });
