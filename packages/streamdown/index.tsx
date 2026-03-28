@@ -41,6 +41,7 @@ import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
+import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   type ControlsConfig,
@@ -699,6 +700,22 @@ export const Streamdown = memo(
         ];
       }
 
+      // Re-parse text content of custom tags as Markdown. This fixes the case
+      // where a custom tag with multiline content is parsed as an HTML block by
+      // CommonMark, which passes inner content through as raw text instead of
+      // Markdown. We skip tags listed in literalTagContent (those intentionally
+      // suppress Markdown parsing). Only applied when allowedTags are defined.
+      if (allowedTagNames.length > 0) {
+        result = [
+          ...result,
+          [
+            rehypeMarkdownInCustomTags,
+            allowedTagNames,
+            literalTagContent ?? [],
+          ],
+        ];
+      }
+
       if (literalTagContent && literalTagContent.length > 0) {
         result = [...result, [rehypeLiteralTagContent, literalTagContent]];
       }
@@ -708,7 +725,13 @@ export const Streamdown = memo(
       }
 
       return result;
-    }, [rehypePlugins, plugins?.math, allowedTags, literalTagContent]);
+    }, [
+      rehypePlugins,
+      plugins?.math,
+      allowedTags,
+      allowedTagNames,
+      literalTagContent,
+    ]);
 
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {
