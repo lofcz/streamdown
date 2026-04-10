@@ -1,8 +1,7 @@
 "use client";
 
-import type { MermaidConfig } from "mermaid";
 import { createContext } from "react";
-import type { ThemeInput } from "./plugin-types";
+import type { MermaidConfig, ThemeInput } from "./plugin-types";
 
 export type ControlsConfig =
   | boolean
