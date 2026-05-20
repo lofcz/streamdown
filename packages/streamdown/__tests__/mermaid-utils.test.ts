@@ -1,11 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { addXlinkNamespaceIfMissing, svgToPngBlob } from "../lib/mermaid/utils";
+import {
+  addXlinkNamespaceIfMissing,
+  serializeSvgForDownload,
+  svgToPngBlob,
+} from "../lib/mermaid/utils";
 
 const BASE64_SVG_DATA_URL_REGEX = /^data:image\/svg\+xml;base64,/;
+const RAW_BR_TAG_REGEX = /<br(?:\s[^/>]*)?>/;
 const XLINK_NS_ATTR_RE =
   /<svg[^>]+xmlns:xlink="http:\/\/www\.w3\.org\/1999\/xlink"/;
 const XLINK_NS_GLOBAL_RE = /xmlns:xlink="http:\/\/www\.w3\.org\/1999\/xlink"/g;
 const SVG_OPEN_ATTR_RE = /<svg[^>]*/;
+
+describe("serializeSvgForDownload", () => {
+  it("serializes HTML-style SVG markup as XML", () => {
+    const svgString =
+      '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><div>Line 1<br>Line 2</div></foreignObject></svg>';
+
+    const serialized = serializeSvgForDownload(svgString);
+
+    expect(serialized).toContain("<svg");
+    expect(serialized).toContain("Line 1");
+    expect(serialized).toContain("Line 2");
+    expect(serialized).not.toMatch(RAW_BR_TAG_REGEX);
+  });
+
+  it("returns the original string when no SVG element exists", () => {
+    const html = "<div>Not an SVG</div>";
+
+    expect(serializeSvgForDownload(html)).toBe(html);
+  });
+});
+
 
 describe("svgToPngBlob", () => {
   let mockCanvas: any;
