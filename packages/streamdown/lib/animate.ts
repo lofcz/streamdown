@@ -268,6 +268,26 @@ const processTextNode = (
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
+
+  const isInsideLink = ancestors.some(
+    (ancestor) => isElement(ancestor) && ancestor.tagName === "a"
+  );
+
+  let finalParts = parts;
+
+  if (config.sep === "word" && isInsideLink) {
+    const merged: string[] = [];
+
+    for (const part of parts) {
+      if (WHITESPACE_ONLY_RE.test(part) && merged.length > 0) {
+        merged[merged.length - 1] += part;
+      } else {
+        merged.push(part);
+      }
+    }
+
+    finalParts = merged;
+  }
   const prevLen = renderState.prevContentLength;
 
   // Fade the list marker in with this item's first animated word. Only the
@@ -278,7 +298,7 @@ const processTextNode = (
   );
   let markerStamped = false;
 
-  const nodes: (Element | Text)[] = parts.map((part) => {
+  const nodes: (Element | Text)[] = finalParts.map((part) => {
     const partStart = charCounter.count;
     charCounter.count += part.length;
     if (WHITESPACE_ONLY_RE.test(part)) {
