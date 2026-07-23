@@ -40,8 +40,6 @@ import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   type ControlsConfig,
   type LinkSafetyConfig,
-  type LinkSafetyModalProps,
-  type MermaidErrorComponentProps,
   type MermaidOptions,
   StreamdownContext,
   type StreamdownContextType,
@@ -52,16 +50,6 @@ import {
   TranslationsContext,
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
-
-export type {
-  ControlsConfig,
-  LinkSafetyConfig,
-  LinkSafetyModalProps,
-  MermaidErrorComponentProps,
-  MermaidOptions,
-  StreamdownContextType,
-};
-export { StreamdownContext };
 
 export type {
   BundledLanguage,
@@ -80,7 +68,6 @@ export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
-
 export type {
   AllowElement,
   Components,
@@ -100,6 +87,15 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export type {
+  ControlsConfig,
+  LinkSafetyConfig,
+  LinkSafetyModalProps,
+  MermaidErrorComponentProps,
+  MermaidOptions,
+  StreamdownContextType,
+} from "./lib/streamdown-context";
+export { StreamdownContext } from "./lib/streamdown-context";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,

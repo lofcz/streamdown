@@ -5,10 +5,7 @@ import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
 import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
-import {
-  type ControlsConfig,
-  StreamdownContext,
-} from "./streamdown-context";
+import { type ControlsConfig, StreamdownContext } from "./streamdown-context";
 import { useTranslations } from "./translations-context";
 import { save } from "./utils";
 
@@ -60,7 +57,10 @@ export const ImageComponent = ({
   const { controls: controlsConfig } = useContext(StreamdownContext);
   const t = useTranslations();
 
-  const showDownloadControl = shouldShowImageControl(controlsConfig, "download");
+  const showDownloadControl = shouldShowImageControl(
+    controlsConfig,
+    "download"
+  );
   const showFullscreenControl = shouldShowImageControl(
     controlsConfig,
     "fullscreen"
@@ -68,7 +68,9 @@ export const ImageComponent = ({
 
   const hasExplicitDimensions = props.width != null || props.height != null;
   const showDownload =
-    showDownloadControl && (imageLoaded || hasExplicitDimensions) && !imageError;
+    showDownloadControl &&
+    (imageLoaded || hasExplicitDimensions) &&
+    !imageError;
   const showFallback = imageError && !hasExplicitDimensions;
   const canOpenLightbox =
     showFullscreenControl && Boolean(src) && !imageError && imageLoaded;
@@ -209,7 +211,7 @@ export const ImageComponent = ({
         className={cn(
           // `not-prose` opts out of Typography's 2em img margins, which otherwise
           // inflate this wrapper and make the hover chrome float in empty space.
-          "group/image relative my-2 block max-w-full not-prose"
+          "group/image not-prose relative my-2 block max-w-full"
         )}
         data-streamdown="image-wrapper"
       >
@@ -245,7 +247,7 @@ export const ImageComponent = ({
           <button
             className={cn(
               "absolute right-2 bottom-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background",
-              "opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100"
+              "opacity-0 focus-visible:opacity-100 group-hover/image:opacity-100"
             )}
             onClick={downloadImage}
             title={t.downloadImage}
@@ -283,18 +285,23 @@ export const ImageComponent = ({
               >
                 <XIcon size={20} />
               </button>
-              {/** biome-ignore lint/performance/noImgElement: "streamdown is framework-agnostic" */}
-              {/** biome-ignore lint/correctness/useImageSize: "unknown size" */}
-              {/** biome-ignore lint/a11y/noStaticElementInteractions: stop backdrop close when interacting with the image */}
-              <img
-                alt={alt}
-                className={cn(
-                  "max-h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)] object-contain"
-                )}
-                data-streamdown="image-lightbox-img"
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: stop backdrop close when interacting with the image */}
+              <div
                 onClick={(event) => event.stopPropagation()}
-                src={src}
-              />
+                onKeyDown={(event) => event.stopPropagation()}
+                role="presentation"
+              >
+                {/** biome-ignore lint/performance/noImgElement: "streamdown is framework-agnostic" */}
+                {/** biome-ignore lint/correctness/useImageSize: "unknown size" */}
+                <img
+                  alt={alt}
+                  className={cn(
+                    "max-h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)] object-contain"
+                  )}
+                  data-streamdown="image-lightbox-img"
+                  src={src}
+                />
+              </div>
             </div>,
             document.body
           )

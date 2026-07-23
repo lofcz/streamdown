@@ -13,11 +13,6 @@ import {
   useContext,
   useState,
 } from "react";
-// BundledLanguage type removed - we now support any language string
-import {
-  type ControlsConfig,
-  StreamdownContext,
-} from "./streamdown-context";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -30,6 +25,8 @@ import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
+// BundledLanguage type removed - we now support any language string
+import { type ControlsConfig, StreamdownContext } from "./streamdown-context";
 import { Table } from "./table";
 
 const START_LINE_PATTERN = /startLine=(\d+)/;
