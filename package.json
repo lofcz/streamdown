@@ -13,7 +13,8 @@
     "check-types": "turbo run check-types",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "pnpm build && changeset publish",
+    "changeset:publish": "pnpm build && pnpm release:publish",
+    "release:publish": "node scripts/skip-published-packages.mjs && changeset publish",
     "bench": "turbo run bench",
     "bench:ui": "turbo run bench:ui",
     "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i"
