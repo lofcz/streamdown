@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { StreamdownContext } from "../index";
 import { ImageComponent } from "../lib/image";
 
 // Setup global URL mocks before any tests run
@@ -65,8 +66,139 @@ describe("ImageComponent", () => {
       '[data-streamdown="image-wrapper"]'
     );
     expect(wrapper).toBeTruthy();
-    expect(wrapper?.className).toContain("group");
+    expect(wrapper?.className).toContain("group/image");
     expect(wrapper?.className).toContain("relative");
+    expect(wrapper?.className).toContain("not-prose");
+    expect(wrapper?.className).not.toContain("inline-block");
+
+    // No gray hover wash — that inflated with prose margins and looked broken.
+    expect(wrapper?.innerHTML.includes("bg-black/10")).toBe(false);
+  });
+
+  it("should open lightbox on image click after load", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="Test"
+        node={null as any}
+        src="https://example.com/image.png"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    expect(img).toBeTruthy();
+    if (!img) {
+      return;
+    }
+
+    fireEvent.load(img);
+    fireEvent.click(img);
+
+    const lightbox = document.querySelector(
+      '[data-streamdown="image-lightbox"]'
+    );
+    expect(lightbox).toBeTruthy();
+    expect(
+      document.querySelector('img[data-streamdown="image-lightbox-img"]')
+    ).toBeTruthy();
+  });
+
+  it("should close lightbox on backdrop click and Escape", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="Test"
+        node={null as any}
+        src="https://example.com/image.png"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (!img) {
+      return;
+    }
+
+    fireEvent.load(img);
+    fireEvent.click(img);
+
+    const lightbox = document.querySelector(
+      '[data-streamdown="image-lightbox"]'
+    );
+    expect(lightbox).toBeTruthy();
+    if (lightbox) {
+      fireEvent.click(lightbox);
+    }
+    expect(
+      document.querySelector('[data-streamdown="image-lightbox"]')
+    ).toBeNull();
+
+    fireEvent.click(img);
+    expect(
+      document.querySelector('[data-streamdown="image-lightbox"]')
+    ).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      document.querySelector('[data-streamdown="image-lightbox"]')
+    ).toBeNull();
+  });
+
+  it("should hide download when image.download is false", () => {
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          controls: { image: { download: false } },
+          isAnimating: false,
+          lineNumbers: true,
+          mode: "static",
+          shikiTheme: ["github-light", "github-dark"],
+        }}
+      >
+        <ImageComponent
+          alt="Test"
+          node={null as any}
+          src="https://example.com/image.png"
+        />
+      </StreamdownContext.Provider>
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (img) {
+      fireEvent.load(img);
+    }
+
+    expect(
+      container.querySelector('button[title="Download image"]')
+    ).toBeNull();
+  });
+
+  it("should not open lightbox when image.fullscreen is false", () => {
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          controls: { image: { fullscreen: false } },
+          isAnimating: false,
+          lineNumbers: true,
+          mode: "static",
+          shikiTheme: ["github-light", "github-dark"],
+        }}
+      >
+        <ImageComponent
+          alt="Test"
+          node={null as any}
+          src="https://example.com/image.png"
+        />
+      </StreamdownContext.Provider>
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (!img) {
+      return;
+    }
+
+    fireEvent.load(img);
+    fireEvent.click(img);
+
+    expect(
+      document.querySelector('[data-streamdown="image-lightbox"]')
+    ).toBeNull();
   });
 
   it("should render download button", () => {
