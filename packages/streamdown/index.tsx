@@ -1,10 +1,8 @@
 "use client";
 
-import type { MermaidConfig } from "mermaid";
 import {
   type ComponentProps,
   type CSSProperties,
-  createContext,
   createElement,
   memo,
   useEffect,
@@ -40,11 +38,30 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
+  type ControlsConfig,
+  type LinkSafetyConfig,
+  type LinkSafetyModalProps,
+  type MermaidErrorComponentProps,
+  type MermaidOptions,
+  StreamdownContext,
+  type StreamdownContextType,
+} from "./lib/streamdown-context";
+import {
   defaultTranslations,
   type StreamdownTranslations,
   TranslationsContext,
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
+
+export type {
+  ControlsConfig,
+  LinkSafetyConfig,
+  LinkSafetyModalProps,
+  MermaidErrorComponentProps,
+  MermaidOptions,
+  StreamdownContextType,
+};
+export { StreamdownContext };
 
 export type {
   BundledLanguage,
@@ -131,62 +148,6 @@ export const normalizeHtmlIndentation = (content: string): string => {
   // Remove 4+ spaces/tabs before HTML tags at line starts
   return content.replace(HTML_LINE_INDENT_PATTERN, "$1");
 };
-
-export type ControlsConfig =
-  | boolean
-  | {
-      table?:
-        | boolean
-        | {
-            copy?: boolean;
-            download?: boolean;
-            fullscreen?: boolean;
-          };
-      code?:
-        | boolean
-        | {
-            copy?: boolean;
-            download?: boolean;
-          };
-      mermaid?:
-        | boolean
-        | {
-            download?: boolean;
-            copy?: boolean;
-            fullscreen?: boolean;
-            panZoom?: boolean;
-          };
-      image?:
-        | boolean
-        | {
-            download?: boolean;
-            fullscreen?: boolean;
-          };
-    };
-
-export interface LinkSafetyModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  url: string;
-}
-
-export interface LinkSafetyConfig {
-  enabled: boolean;
-  onLinkCheck?: (url: string) => Promise<boolean> | boolean;
-  renderModal?: (props: LinkSafetyModalProps) => React.ReactNode;
-}
-
-export interface MermaidErrorComponentProps {
-  chart: string;
-  error: string;
-  retry: () => void;
-}
-
-export interface MermaidOptions {
-  config?: MermaidConfig;
-  errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
-}
 
 export type AllowedTags = Record<string, string[]>;
 
@@ -282,18 +243,6 @@ const carets = {
   circle: " ●",
 };
 
-// Combined context for better performance - reduces React tree depth from 5 nested providers to 1
-export interface StreamdownContextType {
-  controls: ControlsConfig;
-  isAnimating: boolean;
-  /** Show line numbers in code blocks. @default true */
-  lineNumbers: boolean;
-  linkSafety?: LinkSafetyConfig;
-  mermaid?: MermaidOptions;
-  mode: "static" | "streaming";
-  shikiTheme: [ThemeInput, ThemeInput];
-}
-
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
   "github-dark",
@@ -302,20 +251,6 @@ const defaultShikiTheme: [ThemeInput, ThemeInput] = [
 const defaultLinkSafetyConfig: LinkSafetyConfig = {
   enabled: true,
 };
-
-const defaultStreamdownContext: StreamdownContextType = {
-  shikiTheme: defaultShikiTheme,
-  controls: true,
-  isAnimating: false,
-  lineNumbers: true,
-  mode: "streaming",
-  mermaid: undefined,
-  linkSafety: defaultLinkSafetyConfig,
-};
-
-export const StreamdownContext = createContext<StreamdownContextType>(
-  defaultStreamdownContext
-);
 
 export type BlockProps = Options & {
   content: string;

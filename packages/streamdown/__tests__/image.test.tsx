@@ -1,7 +1,7 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StreamdownContext } from "../index";
 import { ImageComponent } from "../lib/image";
+import { StreamdownContext } from "../lib/streamdown-context";
 
 // Setup global URL mocks before any tests run
 if (typeof URL.createObjectURL === "undefined") {

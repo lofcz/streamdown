@@ -1,11 +1,14 @@
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { type ControlsConfig, StreamdownContext } from "../index";
 import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
 import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
+import {
+  type ControlsConfig,
+  StreamdownContext,
+} from "./streamdown-context";
 import { useTranslations } from "./translations-context";
 import { save } from "./utils";
 

@@ -14,7 +14,10 @@ import {
   useState,
 } from "react";
 // BundledLanguage type removed - we now support any language string
-import { type ControlsConfig, StreamdownContext } from "../index";
+import {
+  type ControlsConfig,
+  StreamdownContext,
+} from "./streamdown-context";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
