@@ -52,9 +52,7 @@ describe("List Style and Depth", () => {
    2. Sub second
 2. Second`;
     const { container } = renderWithComponents(content);
-    const ols = container.querySelectorAll(
-      '[data-streamdown="ordered-list"]'
-    );
+    const ols = container.querySelectorAll('[data-streamdown="ordered-list"]');
     expect(ols.length).toBeGreaterThanOrEqual(1);
     expect(ols[0]?.getAttribute("data-depth")).toBe("0");
   });
@@ -64,9 +62,7 @@ describe("List Style and Depth", () => {
   - B
     - C`;
     const { container } = renderWithComponents(content);
-    const lis = container.querySelectorAll(
-      '[data-streamdown="list-item"]'
-    );
+    const lis = container.querySelectorAll('[data-streamdown="list-item"]');
     expect(lis.length).toBeGreaterThanOrEqual(3);
     expect(lis[0]?.getAttribute("data-depth")).toBe("0");
     expect(lis[1]?.getAttribute("data-depth")).toBe("1");
@@ -79,9 +75,7 @@ describe("List Style and Depth", () => {
     const { container } = renderWithComponents(content, {
       listStyle: "flat",
     });
-    const lis = container.querySelectorAll(
-      '[data-streamdown="list-item"]'
-    );
+    const lis = container.querySelectorAll('[data-streamdown="list-item"]');
     for (const li of lis) {
       expect(li.className).toContain("list-disc");
     }
@@ -92,9 +86,7 @@ describe("List Style and Depth", () => {
   - Level 1
     - Level 2`;
     const { container } = renderWithComponents(content);
-    const lis = container.querySelectorAll(
-      '[data-streamdown="list-item"]'
-    );
+    const lis = container.querySelectorAll('[data-streamdown="list-item"]');
     expect(lis.length).toBeGreaterThanOrEqual(3);
     expect(lis[0]?.className).toContain("list-disc");
     expect(lis[1]?.className).toContain("list-[circle]");
@@ -105,9 +97,7 @@ describe("List Style and Depth", () => {
     const content = `1. First
 2. Second`;
     const { container } = renderWithComponents(content);
-    const lis = container.querySelectorAll(
-      '[data-streamdown="list-item"]'
-    );
+    const lis = container.querySelectorAll('[data-streamdown="list-item"]');
     for (const li of lis) {
       expect(li.className).not.toContain("list-disc");
       expect(li.className).not.toContain("list-[circle]");
@@ -119,9 +109,7 @@ describe("List Style and Depth", () => {
     const content = `- Item 1
 - Item 2`;
     const { container } = renderWithComponents(content);
-    const ul = container.querySelector(
-      '[data-streamdown="unordered-list"]'
-    );
+    const ul = container.querySelector('[data-streamdown="unordered-list"]');
     expect(ul).toBeTruthy();
     expect(ul?.className).toContain("list-inside");
     expect(ul?.className).not.toContain("list-disc");
@@ -151,9 +139,7 @@ Some text
     const { container } = renderWithComponents(content, {
       listStyle: "hierarchical",
     });
-    const lis = container.querySelectorAll(
-      '[data-streamdown="list-item"]'
-    );
+    const lis = container.querySelectorAll('[data-streamdown="list-item"]');
     // The top ul li should be disc
     expect(lis[0]?.className).toContain("list-disc");
     // The ol > li should NOT have bullet styles
