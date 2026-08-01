@@ -80,6 +80,13 @@ const countClosingTags = (block: string, tagName: string): number => {
   return matches ? matches.length : 0;
 };
 
+// A `<tag ... />` self-closes — it must NOT be pushed onto htmlStack, otherwise
+// every following block is swallowed into the same (never-closed) HTML block.
+const isSelfClosingTagBlock = (block: string, tagName: string): boolean => {
+  const match = block.match(getOpenTagPattern(tagName));
+  return !!match && match.every((m) => m.trimEnd().endsWith("/>"));
+};
+
 // Helper function to count $$ occurrences
 const countDoubleDollars = (str: string): number => {
   let count = 0;
@@ -145,10 +152,13 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       const openingTagMatch = currentBlock.match(openingTagPattern);
       if (openingTagMatch) {
         const tagName = openingTagMatch[1];
-        // Count how many tags remain unclosed within this block
+        // Count how many tags remain unclosed within this block. A purely
+        // self-closing `<tag ... />` block closes itself immediately — pushing
+        // it onto htmlStack would swallow all following blocks into a
+        // never-closed HTML block and drop them from rendering.
         const openTags = countNonSelfClosingOpenTags(currentBlock, tagName);
         const closeTags = countClosingTags(currentBlock, tagName);
-        if (openTags > closeTags) {
+        if (openTags > closeTags && !isSelfClosingTagBlock(currentBlock, tagName)) {
           // There is at least one unmatched opening tag, keep track of it
           htmlStack.push(tagName);
         }

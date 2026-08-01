@@ -27,6 +27,22 @@ export const preprocessCustomTags = (
   let result = markdown;
 
   for (const tagName of tagNames) {
+    // Self-closing occurrences (`<tag ... />`): custom tags are unknown to the
+    // HTML spec, so rehype-raw's hast parser treats them as non-void container
+    // elements and swallows all following inline content as children, dropping
+    // it from the render. Rewriting to an explicit open+close pair keeps the
+    // tag empty and lets the trailing text stay a sibling text node.
+    const selfClosingPattern = new RegExp(
+      `<${tagName}(?=[\\s>/])((?:"[^"]*"|'[^']*'|[^"'>])*)\\/>`,
+      "gi"
+    );
+    result = result.replace(
+      selfClosingPattern,
+      (_match, attrs: string) => `<${tagName}${attrs}></${tagName}>`
+    );
+  }
+
+  for (const tagName of tagNames) {
     const pattern = new RegExp(
       `(<${tagName}(?=[\\s>/])[^>]*>)([\\s\\S]*?)(</${tagName}\\s*>)`,
       "gi"
