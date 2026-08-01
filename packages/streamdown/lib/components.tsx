@@ -646,6 +646,42 @@ const MemoSup = memo<SupProps>(
 );
 MemoSup.displayName = "MarkdownSup";
 
+type DivProps = WithNode<JSX.IntrinsicElements["div"]>;
+const MemoDiv = memo<DivProps>(
+  ({ children, className, node, ...props }: DivProps) => {
+    const cn = useCn();
+    const isAlert = className?.includes("markdown-alert");
+    const isAlertTitle = className?.includes("markdown-alert-title");
+    if (isAlertTitle) {
+      return (
+        <div className={cn("mb-2 font-semibold", className)} {...props}>
+          {children}
+        </div>
+      );
+    }
+    if (isAlert) {
+      return (
+        <div
+          className={cn(
+            "my-4 rounded-r-md border-muted-foreground/30 border-l-4 bg-muted/40 p-4 [&>p]:my-0",
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </div>
+      );
+    }
+    return (
+      <div className={cn(className)} {...props}>
+        {children}
+      </div>
+    );
+  },
+  (p, n) => sameClassAndNode(p, n)
+);
+MemoDiv.displayName = "MarkdownDiv";
+
 type SubProps = WithNode<JSX.IntrinsicElements["sub"]>;
 const MemoSub = memo<SubProps>(
   ({ children, className, node, ...props }: SubProps) => {
@@ -1060,6 +1096,7 @@ export const components: Options["components"] = {
   td: MemoTd,
   blockquote: MemoBlockquote,
   code: MemoCode,
+  div: MemoDiv,
   img: MemoImg,
   pre: ({ children }) => {
     if (isValidElement(children)) {

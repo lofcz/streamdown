@@ -43,6 +43,7 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import { remarkGithubAlerts } from "./lib/remark/github-alerts";
 import {
   type ControlsConfig,
   type LinkSafetyConfig,
@@ -232,6 +233,19 @@ const defaultSanitizeSchema = {
       "metastring",
       ["className", /^(language-.+|math-display|math-inline)$/],
     ],
+    div: [
+      ...(defaultSchema.attributes?.div ?? []),
+      [
+        "className",
+        /^(markdown-alert|markdown-alert-(note|tip|important|warning|caution))$/,
+      ],
+      "data-streamdown",
+      "data-alert-type",
+    ],
+    p: [
+      ...(defaultSchema.attributes?.p ?? []),
+      ["className", /^markdown-alert-title$/],
+    ],
   },
 };
 
@@ -252,6 +266,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
+  githubAlerts: remarkGithubAlerts,
   codeMeta: remarkCodeMeta,
 } as const;
 
@@ -646,11 +661,35 @@ export const Streamdown = memo(
     // the synchronous path because the plugin reads block content per-render.
     const deferredBlocks = useDeferredValue(blocks);
     // Keep sync path while animating so per-block plugins see freshest content;
-    // otherwise defer under load (React #185).
-    const blocksToRender =
-      mode === "streaming" && !animateCursorRef.current
-        ? deferredBlocks
-        : blocks;
+    // otherwise defer settled/structural work under load (React #185) — but never
+    // visually lag the open trailing block. When the settled prefix is unchanged
+    // between deferred and fresh arrays, render the latest tip immediately.
+    const blocksToRender = useMemo(() => {
+      if (mode !== "streaming" || animateCursorRef.current) {
+        return blocks;
+      }
+      if (deferredBlocks === blocks || deferredBlocks.length === 0) {
+        return blocks;
+      }
+      const deferredLen = deferredBlocks.length;
+      const freshLen = blocks.length;
+      if (freshLen === 0) {
+        return deferredBlocks;
+      }
+      // Structure changed (new settled boundary) — use fresh blocks entirely.
+      if (deferredLen !== freshLen) {
+        return blocks;
+      }
+      for (let i = 0; i < deferredLen - 1; i += 1) {
+        if (deferredBlocks[i] !== blocks[i]) {
+          return blocks;
+        }
+      }
+      // Same settled prefix — swap in the fresh open tip so the UI never lags.
+      const merged = deferredBlocks.slice();
+      merged[deferredLen - 1] = blocks[freshLen - 1];
+      return merged;
+    }, [blocks, deferredBlocks, mode]);
 
     // Pre-compute per-block text directions when dir="auto" so detection
     // runs once per block change rather than on every render pass.

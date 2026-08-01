@@ -251,6 +251,24 @@ And an incomplete [link
     expect(markdowns.length).toBeGreaterThan(1);
   });
 
+  it("keeps the open tip current across rapid streaming updates without blank lines", () => {
+    const { rerender, container } = render(
+      <Streamdown mode="streaming">One **</Streamdown>
+    );
+
+    for (const content of [
+      "One **bold",
+      "One **bold text** more",
+      "One **bold text** and a long tail with no blank line yet",
+    ]) {
+      rerender(<Streamdown mode="streaming">{content}</Streamdown>);
+    }
+
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBeGreaterThan(0);
+    expect(markdowns.at(-1)?.textContent).toContain("no blank line yet");
+  });
+
   it("should not parse incomplete markdown in static mode", () => {
     const content = "Text with **incomplete bold";
     const { container } = render(

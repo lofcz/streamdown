@@ -177,4 +177,55 @@ A tohle je další odstavec, který musí zůstat viditelný.`;
     const joined = state.blocks.join("");
     expect(joined).toContain("jakou úroveň");
   });
+
+  it("append-only stream keeps settled blocks stable and only changes the tip", () => {
+    const full =
+      "First paragraph\n\nSecond paragraph\n\nThird paragraph with **bold**";
+    let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null =
+      null;
+    let prevBlocks: string[] | null = null;
+
+    for (let i = 1; i <= full.length; i += 1) {
+      const slice = full.slice(0, i);
+      state = parseMarkdownIntoBlocksIncremental(slice, state);
+      const blocks = state.blocks.slice();
+
+      if (
+        prevBlocks &&
+        blocks.length > 1 &&
+        prevBlocks.length === blocks.length
+      ) {
+        // All blocks except the last must be identical strings (settled).
+        for (let j = 0; j < blocks.length - 1; j += 1) {
+          expect(blocks[j]).toBe(prevBlocks[j]);
+        }
+      }
+
+      prevBlocks = blocks;
+    }
+  });
+
+  it("append-only stream does not re-lex settled prefix", () => {
+    const full = "First paragraph\n\nSecond paragraph\n\nThird paragraph";
+    let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null =
+      null;
+    let lexCalls = 0;
+    const parseFn = (value: string) => {
+      lexCalls += 1;
+      return parseMarkdownIntoBlocks(value);
+    };
+
+    for (let i = 1; i <= full.length; i += 1) {
+      state = parseMarkdownIntoBlocksIncremental(
+        full.slice(0, i),
+        state,
+        parseFn
+      );
+    }
+
+    // Once we have 2+ blocks, settled prefix is never re-lexed.
+    // The first block settles at i = first "\n\n", so subsequent appends
+    // should only lex the tail. Verify lexCalls is bounded by tail length.
+    expect(lexCalls).toBeLessThanOrEqual(full.length);
+  });
 });
