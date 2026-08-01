@@ -1,10 +1,10 @@
-type MdNode = {
-  type: string;
-  value?: string;
+interface MdNode {
   children?: MdNode[];
   data?: unknown;
   position?: unknown;
-};
+  type: string;
+  value?: string;
+}
 
 /**
  * micromark-extension-math treats single-line `$$...$$` as *inline* math.
@@ -19,11 +19,15 @@ export function promoteLoneInlineMath(tree: MdNode): undefined {
 
 function walk(parent: MdNode): void {
   const children = parent.children;
-  if (!children) return;
+  if (!children) {
+    return;
+  }
 
   for (let i = 0; i < children.length; i += 1) {
     const node = children[i];
-    if (!node) continue;
+    if (!node) {
+      continue;
+    }
 
     if (node.type === "paragraph" && promoteParagraph(node, parent, i)) {
       continue;
@@ -50,9 +54,14 @@ function promoteParagraph(
   }
 
   const inline = meaningful[0];
+  const siblings = parent.children;
+  if (!siblings) {
+    return false;
+  }
+
   // remark-math stamps hProperties for inline; rewrite to display so
   // remark-rehype / rehype-katex see math-display (displayMode: true).
-  parent.children![index] = {
+  siblings[index] = {
     type: "math",
     value: inline.value,
     data: {

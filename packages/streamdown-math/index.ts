@@ -58,7 +58,10 @@ function remarkPromoteLoneInlineMath() {
 export function createMathPlugin(options: MathPluginOptions = {}): MathPlugin {
   const remarkMathPlugin: Pluggable = {
     plugins: [
-      [remarkMath, { singleDollarTextMath: options.singleDollarTextMath ?? false }],
+      [
+        remarkMath,
+        { singleDollarTextMath: options.singleDollarTextMath ?? false },
+      ],
       remarkPromoteLoneInlineMath,
     ],
   };

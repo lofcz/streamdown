@@ -128,8 +128,12 @@ describe("promoteLoneInlineMath", () => {
     let inline = 0;
     let display = 0;
     visit(mdast, (node) => {
-      if (node.type === "inlineMath") inline += 1;
-      if (node.type === "math") display += 1;
+      if (node.type === "inlineMath") {
+        inline += 1;
+      }
+      if (node.type === "math") {
+        display += 1;
+      }
     });
     expect(inline).toBe(1);
     expect(display).toBe(0);
@@ -144,8 +148,12 @@ describe("promoteLoneInlineMath", () => {
     let display = 0;
     let inline = 0;
     visit(tree, (node) => {
-      if (node.type === "math") display += 1;
-      if (node.type === "inlineMath") inline += 1;
+      if (node.type === "math") {
+        display += 1;
+      }
+      if (node.type === "inlineMath") {
+        inline += 1;
+      }
     });
     expect(display).toBe(1);
     expect(inline).toBe(0);
