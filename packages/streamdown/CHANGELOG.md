@@ -1,5 +1,118 @@
 # streamdown
 
+## 2.7.0
+
+### Minor Changes
+
+- 297e729: Fix word splitting logic to correctly merge whitespace with preceding tokens in animation pipeline
+- 19a1735: Add codeBlockMaxHeight and tableMaxHeight props with streaming auto-scroll
+- eaed605: Fix table copy and download actions not working in fullscreen mode.
+
+  - Support table lookup inside the fullscreen portal container.
+  - Restore copy and download functionality for fullscreen tables.
+  - Keep existing inline table controls behavior unchanged.
+
+- f965e2d: Fix Mermaid diagrams so text is readable and diagrams auto-fit container.
+  - Normalize SVG to remove responsive shrinking
+  - Extract intrinsic size from viewBox
+  - Add width-and-height auto-fit in PanZoom
+  - Preserve user zoom/pan after initial fit
+  - Add tests for SVG utilities and auto-fit behavior
+
+### Patch Changes
+
+- a36b1eb: Serialize Mermaid SVGs before download so HTML-style tags render as valid SVG markup.
+- 113352e: Fix stale rendering when in-block markdown content changes during streaming updates.
+- b02b578: fix(animate): serialize stagger delays across sibling blocks to prevent concurrent animation
+
+  Previously all blocks shared a single animate plugin instance and a fixed
+  `startIndex` of 0, so when a new block appeared during streaming its words
+  began animating at delay 0 while the preceding block's words were still
+  animating — resulting in multiple sections revealing concurrently.
+
+  This change introduces an `AnimateCursor` — a small shared counter object
+  that resets to 0 at the start of each React render pass. Each block now gets
+  its own `AnimatePlugin` instance; the plugin reads the cursor for its start
+  index, animates its words, and advances the cursor by its word count. Sibling
+  blocks automatically chain after one another without any manual wiring.
+
+  Fixes #482
+
+- aee5c2a: Fix React #185 (`Maximum update depth exceeded`) cascade under rapid streaming token bursts.
+
+  Replaces the internal `useState` + `useEffect`-to-sync + manual `startTransition`
+  dance that mirrored `blocks` into `displayBlocks` with `useDeferredValue`. The
+  previous pattern fired `setDisplayBlocks(blocks)` on every render where `blocks`
+  was a new reference; under SSE bursts that delivered tokens faster than React
+  committed, those setStates stacked inside one commit cycle and exceeded React's
+  50-nested-update limit. `useDeferredValue` performs the same semantic role
+  (low-priority blocks-state update during streaming) without producing setStates
+  that can cascade.
+
+  No behavior change: SSR/hydration still initializes with the current `blocks`,
+  `animatePlugin` path still uses synchronous (non-deferred) blocks, all 982
+  existing tests pass.
+
+  Closes the cluster of issues tracked in #140; addresses the React #185 reports
+  in downstream consumers when `experimental_throttle` alone is insufficient.
+
+- ca65766: fix(custom-tags): render Markdown inside custom tags with multiline content
+
+  Adds a new rehype plugin (rehypeMarkdownInCustomTags) that re-parses raw text
+  content of custom tag elements as Markdown. Previously, when a custom tag
+  contained multiline content (e.g. `<ai-thinking>
+**bold**</ai-thinking>`),
+  CommonMark treated the block as raw HTML, stripping Markdown formatting.
+  Tags listed in `literalTagContent` are excluded from re-parsing.
+
+  Closes #478
+
+- 6743857: Fix doubled `user-content-` prefix on footnote ids
+
+  Footnote list items were rendered with `id="user-content-user-content-fn-1"` because both `remark-rehype` and `rehype-sanitize` default their `clobberPrefix` to `user-content-`, so the prefix was applied twice. Disabled `clobberPrefix` on `rehype-sanitize` so `remark-rehype` remains the single, consistent prefixer of both footnote ids and backref hrefs — restoring working footnote navigation.
+
+- 44cc2d2: Render the link safety modal through a portal to `document.body` so it is no longer nested inside the paragraph's `<p>` element. This fixes the React hydration error "In HTML, `<div>` cannot be a descendant of `<p>`" that occurred when a link with link safety enabled appeared inside a paragraph.
+- 39a623a: fix(mermaid): add data-streamdown, aria-modal, and correct role to fullscreen overlay
+
+  The Mermaid fullscreen overlay was missing the `data-streamdown="mermaid-fullscreen"` attribute and using `role="button"` instead of `role="dialog"`, and was missing `aria-modal="true"`. This matches the table fullscreen overlay pattern and enables stable CSS targeting and correct accessibility semantics.
+
+- cb2c35c: fix(deps): remove `mermaid` as a hard runtime dependency
+
+  `mermaid` was listed in `dependencies` but the core `streamdown` package
+  only imports it as a type (`import type { MermaidConfig }`). The actual
+  mermaid runtime is exclusively used by the optional `@streamdown/mermaid`
+  plugin — pulling ~75 MB into every install unnecessarily.
+
+  This patch replaces the type import with a local structural type for
+  `MermaidConfig` so no type-level coupling to the `mermaid` package remains
+  in the distributed typings. Users who want fully-typed mermaid config can
+  still `import type { MermaidConfig } from 'mermaid'` themselves; the
+  structural type is compatible.
+
+  Fixes #501
+
+- 50a47cb: fix(tailwind): export STREAMDOWN_CLASSES and getSourceInline() for Tailwind v4 prefix support
+
+  When using Tailwind v4's `prefix()` option, the Tailwind scanner cannot match
+  unprefixed class names in streamdown's dist files to the prefixed utilities it
+  generates (e.g. it looks for `tw:flex` but dist files only contain `flex`).
+
+  This patch adds a new `streamdown/tailwind` entry point that exports:
+
+  - `STREAMDOWN_CLASSES` – a readonly array of every Tailwind utility class used
+    by streamdown and its official plugins
+  - `getSourceInline(prefix?)` – returns a ready-to-paste Tailwind v4
+    `@source inline(...)` directive with all classes, optionally prefixed
+
+  Users can now generate the correct `@source inline()` directive for their
+  prefix and add it to their CSS file.
+
+- de94930: Fix table column widths from shifting during streaming by applying a fixed table layout to standard and fullscreen tables.
+- 7be41e8: fix issue with list markers, task-list checkboxes, images, and hr animations
+- 5c920c5: Incomplete images during streaming now render a loading placeholder instead of being removed entirely. Incomplete images (e.g. `![alt](https://exampl`) are replaced with `![alt](streamdown:incomplete-image)` by remend, and the streamdown `ImageComponent` renders an animated skeleton for this special URL. This mirrors the existing behavior for incomplete links (`streamdown:incomplete-link`).
+- baa9b12: fix(mermaid): render the download control inside the Mermaid fullscreen portal so it's reachable when the diagram is expanded
+- 44af292: Remend only the trailing markdown block during streaming and reuse settled block parses incrementally, avoiding full-document remend churn on every token.
+
 ## 2.6.0
 
 ### Minor Changes

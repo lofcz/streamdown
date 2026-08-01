@@ -1,5 +1,12 @@
 # remend
 
+## 1.3.1
+
+### Patch Changes
+
+- 5c920c5: Incomplete images during streaming now render a loading placeholder instead of being removed entirely. Incomplete images (e.g. `![alt](https://exampl`) are replaced with `![alt](streamdown:incomplete-image)` by remend, and the streamdown `ImageComponent` renders an animated skeleton for this special URL. This mirrors the existing behavior for incomplete links (`streamdown:incomplete-link`).
+- 4ac4beb: Treat LaTeX paren and bracket math as protected math contexts during emphasis completion.
+
 ## 1.3.0
 
 ### Minor Changes
