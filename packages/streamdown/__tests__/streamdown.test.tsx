@@ -266,7 +266,9 @@ And an incomplete [link
 
     const markdowns = container.querySelectorAll('[data-testid="markdown"]');
     expect(markdowns.length).toBeGreaterThan(0);
-    expect(markdowns.at(-1)?.textContent).toContain("no blank line yet");
+    expect(markdowns[markdowns.length - 1]?.textContent).toContain(
+      "no blank line yet"
+    );
   });
 
   it("should not parse incomplete markdown in static mode", () => {
