@@ -47,6 +47,7 @@ import { remarkGithubAlerts } from "./lib/remark/github-alerts";
 import {
   type ControlsConfig,
   type LinkSafetyConfig,
+  type ListStylePreset,
   type MermaidOptions,
   StreamdownContext,
   type StreamdownContextType,
@@ -176,6 +177,8 @@ export type StreamdownProps = Options & {
   tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
+  /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
+  listStyle?: ListStylePreset;
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
@@ -309,6 +312,13 @@ const carets = {
   block: " ▋",
   circle: " ●",
 };
+
+/**
+ * Built-in list bullet style presets for nested unordered lists.
+ * - `"flat"` — all levels use disc
+ * - `"hierarchical"` — disc → circle → square, cycling
+ */
+export type { ListStylePreset } from "./lib/streamdown-context";
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
@@ -460,6 +470,7 @@ export const Streamdown = memo(
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
+    listStyle = "hierarchical",
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
@@ -716,6 +727,7 @@ export const Streamdown = memo(
         controls,
         isAnimating,
         lineNumbers,
+        listStyle,
         mode,
         mermaid,
         linkSafety,
@@ -727,6 +739,7 @@ export const Streamdown = memo(
         controls,
         isAnimating,
         lineNumbers,
+        listStyle,
         mode,
         mermaid,
         linkSafety,

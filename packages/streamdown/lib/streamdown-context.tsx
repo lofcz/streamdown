@@ -59,6 +59,13 @@ export interface MermaidOptions {
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
 }
 
+/**
+ * Built-in list bullet style presets for nested unordered lists.
+ * - `"flat"` — all levels use disc
+ * - `"hierarchical"` — disc → circle → square, cycling
+ */
+export type ListStylePreset = "flat" | "hierarchical";
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
   /** Max height for code blocks (px number or CSS length). `0` / `Infinity` disables. @default 400 */
@@ -68,6 +75,8 @@ export interface StreamdownContextType {
   /** Show line numbers in code blocks. @default true */
   lineNumbers: boolean;
   linkSafety?: LinkSafetyConfig;
+  /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
+  listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
   shikiTheme: [ThemeInput, ThemeInput];
@@ -90,6 +99,7 @@ export const defaultStreamdownContext: StreamdownContextType = {
   controls: true,
   isAnimating: false,
   lineNumbers: true,
+  listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
