@@ -30,7 +30,11 @@ import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
-import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+import {
+  type IncrementalParseState,
+  parseMarkdownIntoBlocks,
+  parseMarkdownIntoBlocksIncremental,
+} from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type {
   MermaidConfig,
@@ -81,7 +85,11 @@ export type {
   UrlTransform,
 } from "./lib/markdown";
 export { defaultUrlTransform } from "./lib/markdown";
-export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export {
+  parseMarkdownIntoBlocks,
+  parseMarkdownIntoBlocksIncremental,
+} from "./lib/parse-blocks";
+export type { IncrementalParseState } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
@@ -248,6 +256,37 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
 const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
 const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
 
+/** Cache sanitize stacks by `allowedTags` object identity so Block memo's
+ * rehypePlugins reference check stays stable across Streamdown instances. */
+const allowedTagsRehypeCache = new WeakMap<object, Pluggable[]>();
+
+function rehypePluginsForAllowedTags(
+  allowedTags: Record<string, string[]>
+): Pluggable[] {
+  const cached = allowedTagsRehypeCache.get(allowedTags);
+  if (cached) {
+    return cached;
+  }
+  const extendedSchema = {
+    ...defaultSanitizeSchema,
+    tagNames: [
+      ...(defaultSanitizeSchema.tagNames ?? []),
+      ...Object.keys(allowedTags),
+    ],
+    attributes: {
+      ...defaultSanitizeSchema.attributes,
+      ...allowedTags,
+    },
+  };
+  const plugins: Pluggable[] = [
+    defaultRehypePlugins.raw,
+    [rehypeSanitize, extendedSchema],
+    defaultRehypePlugins.harden,
+  ];
+  allowedTagsRehypeCache.set(allowedTags, plugins);
+  return plugins;
+}
+
 const carets = {
   block: " ▋",
   circle: " ●",
@@ -304,8 +343,8 @@ export const Block = memo(
       animatePluginProp.setAnimateCodeBlocks(isIncomplete);
     }
 
-    // Note: remend is already applied to the entire markdown before parsing into blocks
-    // in the Streamdown component, so we don't need to apply it again here
+    // Note: remend is applied to the trailing block only (in Streamdown), so we
+    // don't need to apply it again here
     const normalizedContent =
       typeof content === "string" && shouldNormalizeHtmlIndentation
         ? normalizeHtmlIndentation(content)
@@ -460,16 +499,20 @@ export const Streamdown = memo(
       [allowedTags]
     );
 
-    // Apply remend to fix incomplete markdown BEFORE parsing into blocks
-    // This prevents partial list items from being interpreted as setext headings
+    // Track raw (pre-remend) block parses so append-only streams can reuse
+    // settled prefix blocks instead of re-lexing the entire document.
+    const incrementalParseRef = useRef<IncrementalParseState | null>(null);
+
+    // Tag preprocess only — do NOT remend the full document here.
+    // Remending before block-split rewrites earlier incomplete markers as the
+    // stream continues (e.g. `**bold` → `**bold**` then `**bold text**`), which
+    // changes settled block content every token, defeats Block memo, and forces
+    // a full Markdown re-parse + DOM rebuild of the entire message.
     const processedChildren = useMemo(() => {
       if (typeof children !== "string") {
         return "";
       }
-      let result =
-        mode === "streaming" && shouldParseIncompleteMarkdown
-          ? remend(children, remendOptions)
-          : children;
+      let result = children;
 
       // Escape markdown metacharacters inside literal-tag-content tags so that
       // children are rendered as plain text rather than parsed as markdown.
@@ -487,19 +530,44 @@ export const Streamdown = memo(
       }
 
       return result;
+    }, [children, allowedTagNames, literalTagContent]);
+
+    const blocks = useMemo(() => {
+      const prev =
+        mode === "streaming" ? incrementalParseRef.current : null;
+      const parsed = parseMarkdownIntoBlocksIncremental(
+        processedChildren,
+        prev,
+        parseMarkdownIntoBlocksFn
+      );
+      incrementalParseRef.current =
+        mode === "streaming" ? parsed : null;
+
+      if (
+        !(mode === "streaming" && shouldParseIncompleteMarkdown) ||
+        parsed.blocks.length === 0
+      ) {
+        return parsed.blocks;
+      }
+
+      // Close incomplete markers on the open trailing block only. Settled
+      // prefix blocks stay byte-identical across tokens so Block memo holds.
+      const lastIdx = parsed.blocks.length - 1;
+      const last = parsed.blocks[lastIdx];
+      const remended = remend(last, remendOptions);
+      if (remended === last) {
+        return parsed.blocks;
+      }
+      const next = parsed.blocks.slice();
+      next[lastIdx] = remended;
+      return next;
     }, [
-      children,
+      processedChildren,
+      parseMarkdownIntoBlocksFn,
       mode,
       shouldParseIncompleteMarkdown,
       remendOptions,
-      allowedTagNames,
-      literalTagContent,
     ]);
-
-    const blocks = useMemo(
-      () => parseMarkdownIntoBlocksFn(processedChildren),
-      [processedChildren, parseMarkdownIntoBlocksFn]
-    );
 
     // Stable key derived from animated option values. This prevents the
     // plugin from being recreated when the user passes an inline object
@@ -693,23 +761,7 @@ export const Streamdown = memo(
         Object.keys(allowedTags).length > 0 &&
         rehypePlugins === defaultRehypePluginsArray
       ) {
-        const extendedSchema = {
-          ...defaultSanitizeSchema,
-          tagNames: [
-            ...(defaultSanitizeSchema.tagNames ?? []),
-            ...Object.keys(allowedTags),
-          ],
-          attributes: {
-            ...defaultSanitizeSchema.attributes,
-            ...allowedTags,
-          },
-        };
-
-        result = [
-          defaultRehypePlugins.raw,
-          [rehypeSanitize, extendedSchema],
-          defaultRehypePlugins.harden,
-        ];
+        result = rehypePluginsForAllowedTags(allowedTags);
       }
 
       // Re-parse text content of custom tags as Markdown. This fixes the case

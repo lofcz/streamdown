@@ -181,3 +181,49 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
   return mergedBlocks;
 };
+
+export type IncrementalParseState = {
+  /** Tag-preprocessed markdown that produced `blocks` (before last-block remend). */
+  source: string;
+  blocks: string[];
+};
+
+/**
+ * Append-only parse for streaming: keep settled prefix blocks by identity and
+ * only re-lex the unfinished tail. Falls back to a full parse when the source
+ * is not a pure append (edits, rewinds, or structural shifts).
+ */
+export const parseMarkdownIntoBlocksIncremental = (
+  markdown: string,
+  prev: IncrementalParseState | null | undefined,
+  parseFn: (value: string) => string[] = parseMarkdownIntoBlocks
+): IncrementalParseState => {
+  if (!(prev && prev.source && markdown.startsWith(prev.source))) {
+    return { source: markdown, blocks: parseFn(markdown) };
+  }
+
+  if (markdown === prev.source) {
+    return prev;
+  }
+
+  // Zero settled blocks: the whole document is still the open tail.
+  if (prev.blocks.length <= 1) {
+    return { source: markdown, blocks: parseFn(markdown) };
+  }
+
+  const settled = prev.blocks.slice(0, -1);
+  let settledLength = 0;
+  for (const block of settled) {
+    settledLength += block.length;
+  }
+  const settledText = markdown.slice(0, settledLength);
+  // Guard against blocks whose concatenation doesn't match source offsets
+  // (shouldn't happen with marked's raw tokens, but cheap to verify).
+  if (settled.join("") !== settledText) {
+    return { source: markdown, blocks: parseFn(markdown) };
+  }
+
+  const tail = markdown.slice(settledLength);
+  const tailBlocks = parseFn(tail);
+  return { source: markdown, blocks: [...settled, ...tailBlocks] };
+};
