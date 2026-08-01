@@ -52,6 +52,12 @@
     var(--sd-marker-easing, ease) var(--sd-marker-delay, 0ms) both;
 }
 
+.markdown-alert-title .octicon {
+  display: inline-block;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
 @supports (background: color-mix(in oklab, red 10%, transparent)) {
   .markdown-alert-note {
     background-color: color-mix(

@@ -694,19 +694,11 @@ const MemoDiv = memo<DivProps>(
   ({ children, className, node, ...props }: DivProps) => {
     const cn = useCn();
     const isAlert = className?.includes("markdown-alert");
-    const isAlertTitle = className?.includes("markdown-alert-title");
-    if (isAlertTitle) {
-      return (
-        <div className={cn("mb-2 font-semibold", className)} {...props}>
-          {children}
-        </div>
-      );
-    }
     if (isAlert) {
       return (
         <div
           className={cn(
-            "my-4 rounded-r-md border-muted-foreground/30 border-l-4 bg-muted/40 p-4 [&>p]:my-0",
+            "my-4 rounded-r-md border-muted-foreground/30 border-l-4 bg-muted/40 px-4 py-3 [&>p:last-child]:mb-0",
             className
           )}
           {...props}
@@ -1078,7 +1070,25 @@ MemoImg.displayName = "MarkdownImg";
 
 type ParagraphProps = WithNode<JSX.IntrinsicElements["p"]>;
 const MemoParagraph = memo<ParagraphProps>(
-  ({ children, node, ...props }: ParagraphProps) => {
+  ({ children, className, node, ...props }: ParagraphProps) => {
+    const cn = useCn();
+
+    // GitHub alert title — `<p class="markdown-alert-title">` with an octicon.
+    // Style it like GitHub: flex row, semibold, icon colored per alert kind.
+    if (className?.includes("markdown-alert-title")) {
+      return (
+        <p
+          className={cn(
+            "mb-1 flex items-center gap-2 font-semibold [&>svg]:inline-block",
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </p>
+      );
+    }
+
     // Check if the paragraph contains only an image element
     // If so, render the image directly without the <p> wrapper to avoid hydration errors
     // (since our ImageComponent returns a <div>, which cannot be nested inside <p>)
@@ -1112,7 +1122,11 @@ const MemoParagraph = memo<ParagraphProps>(
       }
     }
 
-    return <p {...props}>{children}</p>;
+    return (
+      <p className={className} {...props}>
+        {children}
+      </p>
+    );
   },
   (p, n) => sameClassAndNode(p, n)
 );

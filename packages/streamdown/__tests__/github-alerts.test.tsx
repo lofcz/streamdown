@@ -1,64 +1,53 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { Streamdown } from "../index";
 import { Markdown } from "../lib/markdown";
 import { remarkGithubAlerts } from "../lib/remark/github-alerts";
 
 describe("remarkGithubAlerts", () => {
-  it("renders NOTE alert with data attributes", () => {
+  it("renders NOTE alert with markdown-alert classes", () => {
     const content = "> [!NOTE]\n> Information here";
     const { container } = render(
       <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
     );
-    const alert = container.querySelector('[data-streamdown="alert"]');
+    const alert = container.querySelector(".markdown-alert");
     expect(alert).toBeTruthy();
-    expect(alert?.getAttribute("data-alert-type")).toBe("note");
-    expect(alert?.classList.contains("markdown-alert")).toBe(true);
     expect(alert?.classList.contains("markdown-alert-note")).toBe(true);
   });
 
-  it("renders TIP alert", () => {
-    const content = "> [!TIP]\n> Helpful advice";
+  it.each([
+    ["NOTE", "note"],
+    ["TIP", "tip"],
+    ["IMPORTANT", "important"],
+    ["WARNING", "warning"],
+    ["CAUTION", "caution"],
+  ])("renders %s alert", (keyword, kind) => {
+    const content = `> [!${keyword}]\n> Body`;
     const { container } = render(
       <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
     );
-    const alert = container.querySelector('[data-streamdown="alert"]');
-    expect(alert?.getAttribute("data-alert-type")).toBe("tip");
+    expect(container.querySelector(`.markdown-alert-${kind}`)).toBeTruthy();
   });
 
-  it("renders IMPORTANT alert", () => {
-    const content = "> [!IMPORTANT]\n> Key info";
-    const { container } = render(
-      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
-    );
-    const alert = container.querySelector('[data-streamdown="alert"]');
-    expect(alert?.getAttribute("data-alert-type")).toBe("important");
+  it("renders a p.markdown-alert-title with octicon and capitalized title", () => {
+    const content = "> [!NOTE]\n> Body";
+    const { container } = render(<Streamdown children={content} />);
+    const title = container.querySelector("p.markdown-alert-title");
+    expect(title).toBeTruthy();
+    // Octicon svg + capitalized title text.
+    expect(title?.querySelector("svg.octicon")).toBeTruthy();
+    expect(title?.textContent).toBe("Note");
   });
 
-  it("renders WARNING alert", () => {
-    const content = "> [!WARNING]\n> Urgent info";
-    const { container } = render(
-      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
-    );
-    const alert = container.querySelector('[data-streamdown="alert"]');
-    expect(alert?.getAttribute("data-alert-type")).toBe("warning");
-  });
-
-  it("renders CAUTION alert", () => {
-    const content = "> [!CAUTION]\n> Risky action";
-    const { container } = render(
-      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
-    );
-    const alert = container.querySelector('[data-streamdown="alert"]');
-    expect(alert?.getAttribute("data-alert-type")).toBe("caution");
-  });
-
-  it("renders custom title on marker line", () => {
-    const content = "> [!WARNING] Custom Title\n> Body text";
-    const { container } = render(
-      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
-    );
-    expect(container.innerHTML).toContain("markdown-alert-title");
-    expect(container.innerHTML).toContain("Custom Title");
+  it("splits title and body correctly through the full Streamdown pipeline", () => {
+    const content =
+      "> [!NOTE]\n> Užitečné informace, které by uživatel neměl přehlédnout, i když jsou doplňkové.\n> .";
+    const { container } = render(<Streamdown children={content} />);
+    const alert = container.querySelector(".markdown-alert");
+    const title = alert?.querySelector(".markdown-alert-title");
+    expect(title?.textContent).toBe("Note");
+    const body = alert?.querySelector("p:not(.markdown-alert-title)");
+    expect(body?.textContent).toContain("Užitečné informace");
   });
 
   it("preserves nested markdown in alert body", () => {
@@ -66,9 +55,44 @@ describe("remarkGithubAlerts", () => {
     const { container } = render(
       <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
     );
-    const alert = container.querySelector('[data-streamdown="alert"]');
+    const alert = container.querySelector(".markdown-alert");
     expect(alert?.textContent).toContain("Bold");
     expect(alert?.textContent).toContain("italic");
+    expect(alert?.querySelector("strong")).toBeTruthy();
+    expect(alert?.querySelector("em")).toBeTruthy();
+  });
+
+  it("handles hard break after marker (two-space suffix)", () => {
+    const content = '> [!NOTE]  \n> this is an example "note"';
+    const { container } = render(
+      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
+    );
+    const alert = container.querySelector(".markdown-alert");
+    const body = alert?.querySelector("p:not(.markdown-alert-title)");
+    expect(body?.textContent).toContain('this is an example "note"');
+    // No leading blank line in body.
+    expect(body?.innerHTML.startsWith("<br")).toBe(false);
+  });
+
+  it("renders text after the marker as a plain blockquote (GitHub behavior)", () => {
+    const content = "> [!NOTE] not a valid title\n> Hello World!";
+    const { container } = render(
+      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
+    );
+    expect(container.querySelector(".markdown-alert")).toBeFalsy();
+    const blockquote = container.querySelector("blockquote");
+    expect(blockquote).toBeTruthy();
+    expect(blockquote?.textContent).toContain("[!NOTE] not a valid title");
+  });
+
+  it("keeps an empty alert marker as a plain blockquote (GitHub behavior)", () => {
+    const content = "> [!NOTE]";
+    const { container } = render(
+      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
+    );
+    expect(container.querySelector(".markdown-alert")).toBeFalsy();
+    const blockquote = container.querySelector("blockquote");
+    expect(blockquote).toBeTruthy();
   });
 
   it("keeps regular blockquote without marker as blockquote", () => {
@@ -78,7 +102,7 @@ describe("remarkGithubAlerts", () => {
     );
     const blockquote = container.querySelector("blockquote");
     expect(blockquote).toBeTruthy();
-    expect(container.querySelector('[data-streamdown="alert"]')).toBeFalsy();
+    expect(container.querySelector(".markdown-alert")).toBeFalsy();
   });
 
   it("ignores unknown alert markers", () => {
@@ -88,7 +112,27 @@ describe("remarkGithubAlerts", () => {
     );
     const blockquote = container.querySelector("blockquote");
     expect(blockquote).toBeTruthy();
-    expect(container.querySelector('[data-streamdown="alert"]')).toBeFalsy();
+    expect(container.querySelector(".markdown-alert")).toBeFalsy();
+  });
+
+  it("matches lowercase markers (GitHub behavior)", () => {
+    const content = "> [!note]\n> lower body";
+    const { container } = render(<Streamdown children={content} />);
+    expect(container.querySelector(".markdown-alert-note")).toBeTruthy();
+    expect(container.querySelector(".markdown-alert-title")?.textContent).toBe(
+      "Note"
+    );
+  });
+
+  it("does not transform nested alerts (GitHub behavior)", () => {
+    const content = "> [!NOTE]\n> > [!TIP]\n> > I'm a tip inside";
+    const { container } = render(
+      <Markdown children={content} remarkPlugins={[remarkGithubAlerts]} />
+    );
+    // Outer becomes an alert, inner stays a plain blockquote.
+    expect(container.querySelector(".markdown-alert-note")).toBeTruthy();
+    expect(container.querySelector(".markdown-alert-tip")).toBeFalsy();
+    expect(container.querySelector("blockquote")).toBeTruthy();
   });
 
   it("handles streaming incomplete alert marker safely", () => {

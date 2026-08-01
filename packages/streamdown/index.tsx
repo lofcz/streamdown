@@ -242,14 +242,19 @@ const defaultSanitizeSchema = {
         "className",
         /^(markdown-alert|markdown-alert-(note|tip|important|warning|caution))$/,
       ],
-      "data-streamdown",
-      "data-alert-type",
     ],
     p: [
       ...(defaultSchema.attributes?.p ?? []),
       ["className", /^markdown-alert-title$/],
     ],
+    svg: [...(defaultSchema.attributes?.svg ?? []), "className", "viewBox"],
   },
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    // GitHub alert title icons (octicons) emitted by remarkGithubAlerts.
+    "svg",
+    "path",
+  ],
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
