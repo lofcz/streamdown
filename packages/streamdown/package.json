@@ -1,6 +1,6 @@
 {
   "name": "@lofcz/streamdown",
-  "version": "2.7.4",
+  "version": "2.8.0",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
