@@ -224,7 +224,14 @@ const defaultSanitizeSchema = {
   },
   attributes: {
     ...defaultSchema.attributes,
-    code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
+    // Keep remark-math's math-display / math-inline markers. Default schema only
+    // allows /^language-./ on <code>; extra className allowlist entries do NOT
+    // OR together (hast-util-sanitize), so use one regex covering both.
+    // Without math-display, rehype-katex always uses displayMode:false.
+    code: [
+      "metastring",
+      ["className", /^(language-.+|math-display|math-inline)$/],
+    ],
   },
 };
 

@@ -3,6 +3,7 @@
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import type { Pluggable } from "unified";
+import { promoteLoneInlineMath } from "./promote-lone-math";
 
 /**
  * Plugin for math rendering (KaTeX)
@@ -41,13 +42,26 @@ export interface MathPluginOptions {
 }
 
 /**
+ * After remark-math, promote paragraphs that only contain inlineMath to flow
+ * math. micromark parses single-line `$$...$$` as inline; LLMs emit that form
+ * for display equations, which then clip under prose line-height.
+ */
+function remarkPromoteLoneInlineMath() {
+  return (tree: Parameters<typeof promoteLoneInlineMath>[0]) => {
+    promoteLoneInlineMath(tree);
+  };
+}
+
+/**
  * Create a math plugin with optional configuration
  */
 export function createMathPlugin(options: MathPluginOptions = {}): MathPlugin {
-  const remarkMathPlugin: Pluggable = [
-    remarkMath,
-    { singleDollarTextMath: options.singleDollarTextMath ?? false },
-  ];
+  const remarkMathPlugin: Pluggable = {
+    plugins: [
+      [remarkMath, { singleDollarTextMath: options.singleDollarTextMath ?? false }],
+      remarkPromoteLoneInlineMath,
+    ],
+  };
 
   const rehypeKatexPlugin: Pluggable = [
     rehypeKatex,
