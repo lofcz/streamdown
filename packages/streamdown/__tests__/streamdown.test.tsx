@@ -264,11 +264,11 @@ And an incomplete [link
       rerender(<Streamdown mode="streaming">{content}</Streamdown>);
     }
 
-    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    const markdowns = [
+      ...container.querySelectorAll('[data-testid="markdown"]'),
+    ];
     expect(markdowns.length).toBeGreaterThan(0);
-    expect(markdowns[markdowns.length - 1]?.textContent).toContain(
-      "no blank line yet"
-    );
+    expect(markdowns.at(-1)?.textContent).toContain("no blank line yet");
   });
 
   it("should not parse incomplete markdown in static mode", () => {
