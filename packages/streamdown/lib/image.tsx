@@ -215,9 +215,7 @@ export const ImageComponent = ({
         data-streamdown="image-wrapper"
       >
         <div
-          className={cn(
-            "h-24 w-48 animate-pulse rounded-lg bg-muted"
-          )}
+          className={cn("h-24 w-48 animate-pulse rounded-lg bg-muted")}
           data-streamdown="image-placeholder"
         />
       </div>

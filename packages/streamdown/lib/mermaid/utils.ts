@@ -1,4 +1,14 @@
 const SVG_OPEN_TAG_RE = /(<svg\b)/;
+const SVG_TAG_RE = /<svg\b[^>]*>/i;
+const SVG_VIEWBOX_RE = /\bviewBox=(['"])(.*?)\1/i;
+const SVG_WIDTH_ATTR_RE = /\swidth=(['"]).*?\1/i;
+const SVG_HEIGHT_ATTR_RE = /\sheight=(['"]).*?\1/i;
+const SVG_STYLE_ATTR_RE = /\sstyle=(['"])(.*?)\1/i;
+const SVG_TAG_START_RE = /^<svg/i;
+const CSS_WIDTH_DECL_RE = /^width\s*:/i;
+const CSS_HEIGHT_DECL_RE = /^height\s*:/i;
+const CSS_MAX_WIDTH_DECL_RE = /^max-width\s*:/i;
+const VIEWBOX_SPLIT_RE = /[\s,]+/;
 
 /**
  * Ensure the SVG root element declares the xlink namespace when the document
@@ -54,13 +64,13 @@ export const serializeSvgForDownload = (svgString: string): string => {
 export const getMermaidSvgSize = (
   svgString: string
 ): { height: number; width: number } | null => {
-  const svgTagMatch = svgString.match(/<svg\b[^>]*>/i);
+  const svgTagMatch = svgString.match(SVG_TAG_RE);
   if (!svgTagMatch) {
     return null;
   }
 
   const svgTag = svgTagMatch[0];
-  const viewBoxMatch = svgTag.match(/\bviewBox=(['"])(.*?)\1/i);
+  const viewBoxMatch = svgTag.match(SVG_VIEWBOX_RE);
   const viewBox = viewBoxMatch?.[2];
 
   if (!viewBox) {
@@ -69,7 +79,7 @@ export const getMermaidSvgSize = (
 
   const values = viewBox
     .trim()
-    .split(/[\s,]+/)
+    .split(VIEWBOX_SPLIT_RE)
     .map((value) => Number.parseFloat(value));
 
   if (values.length < 4 || values.slice(0, 4).some(Number.isNaN)) {
@@ -91,7 +101,7 @@ export const getMermaidSvgSize = (
  * diagrams until text becomes unreadable.
  */
 export const normalizeMermaidInlineSvg = (svgString: string): string => {
-  const svgTagMatch = svgString.match(/<svg\b[^>]*>/i);
+  const svgTagMatch = svgString.match(SVG_TAG_RE);
   if (!svgTagMatch) {
     return svgString;
   }
@@ -105,10 +115,10 @@ export const normalizeMermaidInlineSvg = (svgString: string): string => {
     const { width, height } = size;
 
     let updatedSvgTag = svgTag
-      .replace(/\swidth=(['"]).*?\1/gi, "")
-      .replace(/\sheight=(['"]).*?\1/gi, "");
+      .replace(SVG_WIDTH_ATTR_RE, "")
+      .replace(SVG_HEIGHT_ATTR_RE, "");
 
-    const styleMatch = updatedSvgTag.match(/\sstyle=(['"])(.*?)\1/i);
+    const styleMatch = updatedSvgTag.match(SVG_STYLE_ATTR_RE);
     const sizeDeclarations = `width:${width}px;height:${height}px;max-width:none;`;
 
     if (styleMatch) {
@@ -120,26 +130,28 @@ export const normalizeMermaidInlineSvg = (svgString: string): string => {
         .filter(Boolean)
         .filter(
           (decl) =>
-            !/^width\s*:/i.test(decl) &&
-            !/^height\s*:/i.test(decl) &&
-            !/^max-width\s*:/i.test(decl)
+            !(
+              CSS_WIDTH_DECL_RE.test(decl) ||
+              CSS_HEIGHT_DECL_RE.test(decl) ||
+              CSS_MAX_WIDTH_DECL_RE.test(decl)
+            )
         )
         .join(";");
 
       const mergedStyle = `${sizeDeclarations}${filtered ? `${filtered};` : ""}`;
       updatedSvgTag = updatedSvgTag.replace(
-        /\sstyle=(['"])(.*?)\1/i,
+        SVG_STYLE_ATTR_RE,
         ` style=${styleQuote}${mergedStyle}${styleQuote}`
       );
     } else {
       updatedSvgTag = updatedSvgTag.replace(
-        /^<svg/i,
+        SVG_TAG_START_RE,
         `<svg style="${sizeDeclarations}"`
       );
     }
 
     updatedSvgTag = updatedSvgTag.replace(
-      /^<svg/i,
+      SVG_TAG_START_RE,
       `<svg width="${width}" height="${height}"`
     );
 

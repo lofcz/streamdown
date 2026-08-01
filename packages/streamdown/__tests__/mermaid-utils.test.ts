@@ -34,7 +34,6 @@ describe("serializeSvgForDownload", () => {
   });
 });
 
-
 describe("svgToPngBlob", () => {
   let mockCanvas: any;
   let mockCtx: any;

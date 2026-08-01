@@ -92,7 +92,7 @@ export const CodeBlockBody = memo(
         return;
       }
       el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
-    }, [isAnimating, maxHeightStyle, result]);
+    }, [isAnimating, maxHeightStyle]);
 
     useEffect(() => {
       if (!isAnimating) {
@@ -128,7 +128,9 @@ export const CodeBlockBody = memo(
       <div
         className={cn(
           className,
-          maxHeightStyle ? "overflow-x-auto overflow-y-auto" : "overflow-x-auto",
+          maxHeightStyle
+            ? "overflow-x-auto overflow-y-auto"
+            : "overflow-x-auto",
           "rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}

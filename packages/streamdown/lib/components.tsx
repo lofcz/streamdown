@@ -200,10 +200,9 @@ const MemoLi = memo<LiProps>(
     // Unwrap a single paragraph child (common for "loose" lists). Custom `p`
     // components mean `type === "p"` is unreliable — also check hast tagName.
     const soleChild = childArray[0];
-    const soleChildTag =
-      isValidElement(soleChild)
-        ? (soleChild.props as { node?: MarkdownNode }).node?.tagName
-        : undefined;
+    const soleChildTag = isValidElement(soleChild)
+      ? (soleChild.props as { node?: MarkdownNode }).node?.tagName
+      : undefined;
     const normalizedChildren =
       childArray.length === 1 &&
       isValidElement(soleChild) &&

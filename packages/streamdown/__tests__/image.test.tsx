@@ -568,7 +568,9 @@ describe("incomplete image placeholder", () => {
     expect(placeholder).toBeTruthy();
 
     // Wrapper should have data-incomplete="true"
-    const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+    const wrapper = container.querySelector(
+      '[data-streamdown="image-wrapper"]'
+    );
     expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
   });
 

@@ -112,7 +112,7 @@ export const TableFullscreenButton = ({
                 >
                   <table
                     className={cn(
-                      "table-fixed w-full border-collapse border border-border"
+                      "w-full table-fixed border-collapse border border-border"
                     )}
                     data-streamdown="table"
                   >

@@ -21,7 +21,7 @@ export const PanZoom = ({
   children,
   className,
   contentSize,
-  fitKey,
+  fitKey: _fitKey,
   minZoom = 0.5,
   maxZoom = 3,
   zoomStep = 0.1,
@@ -134,7 +134,7 @@ export const PanZoom = ({
   }, [initialZoom, isAutoFit, minZoom]);
 
   useEffect(() => {
-    if (!isAutoFit || !contentSize) {
+    if (!(isAutoFit && contentSize)) {
       return;
     }
 
@@ -175,7 +175,7 @@ export const PanZoom = ({
     }
 
     setHasUserInteracted(false);
-  }, [fitKey, isAutoFit]);
+  }, [isAutoFit]);
 
   useEffect(() => {
     const container = containerRef.current;

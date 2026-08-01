@@ -36,11 +36,7 @@ import {
   parseMarkdownIntoBlocksIncremental,
 } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
-import type {
-  MermaidConfig,
-  PluginConfig,
-  ThemeInput,
-} from "./lib/plugin-types";
+import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
@@ -85,11 +81,11 @@ export type {
   UrlTransform,
 } from "./lib/markdown";
 export { defaultUrlTransform } from "./lib/markdown";
+export type { IncrementalParseState } from "./lib/parse-blocks";
 export {
   parseMarkdownIntoBlocks,
   parseMarkdownIntoBlocksIncremental,
 } from "./lib/parse-blocks";
-export type { IncrementalParseState } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
@@ -533,15 +529,13 @@ export const Streamdown = memo(
     }, [children, allowedTagNames, literalTagContent]);
 
     const blocks = useMemo(() => {
-      const prev =
-        mode === "streaming" ? incrementalParseRef.current : null;
+      const prev = mode === "streaming" ? incrementalParseRef.current : null;
       const parsed = parseMarkdownIntoBlocksIncremental(
         processedChildren,
         prev,
         parseMarkdownIntoBlocksFn
       );
-      incrementalParseRef.current =
-        mode === "streaming" ? parsed : null;
+      incrementalParseRef.current = mode === "streaming" ? parsed : null;
 
       if (
         !(mode === "streaming" && shouldParseIncompleteMarkdown) ||

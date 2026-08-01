@@ -182,11 +182,11 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   return mergedBlocks;
 };
 
-export type IncrementalParseState = {
+export interface IncrementalParseState {
+  blocks: string[];
   /** Tag-preprocessed markdown that produced `blocks` (before last-block remend). */
   source: string;
-  blocks: string[];
-};
+}
 
 /**
  * Append-only parse for streaming: keep settled prefix blocks by identity and
@@ -198,7 +198,7 @@ export const parseMarkdownIntoBlocksIncremental = (
   prev: IncrementalParseState | null | undefined,
   parseFn: (value: string) => string[] = parseMarkdownIntoBlocks
 ): IncrementalParseState => {
-  if (!(prev && prev.source && markdown.startsWith(prev.source))) {
+  if (!(prev?.source && markdown.startsWith(prev.source))) {
     return { source: markdown, blocks: parseFn(markdown) };
   }
 

@@ -26,9 +26,10 @@ export const Mermaid = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
-  const [svgSize, setSvgSize] = useState<{ height: number; width: number } | null>(
-    null
-  );
+  const [svgSize, setSvgSize] = useState<{
+    height: number;
+    width: number;
+  } | null>(null);
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);

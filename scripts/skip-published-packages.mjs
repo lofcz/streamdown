@@ -29,7 +29,9 @@ function packageJsonPaths() {
       continue;
     }
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
+      if (!entry.isDirectory()) {
+        continue;
+      }
       paths.push(join(abs, entry.name, "package.json"));
     }
   }
@@ -40,7 +42,13 @@ function versionOnNpm(name, version) {
   try {
     execFileSync(
       "npm",
-      ["view", `${name}@${version}`, "version", "--registry", "https://registry.npmjs.org"],
+      [
+        "view",
+        `${name}@${version}`,
+        "version",
+        "--registry",
+        "https://registry.npmjs.org",
+      ],
       { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8" }
     );
     return true;
@@ -61,7 +69,9 @@ for (const pkgPath of packageJsonPaths()) {
   }
 
   const pkg = JSON.parse(raw);
-  if (!pkg.name || pkg.private) continue;
+  if (!pkg.name || pkg.private) {
+    continue;
+  }
 
   if (versionOnNpm(pkg.name, pkg.version)) {
     pkg.private = true;

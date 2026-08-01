@@ -92,7 +92,7 @@ export const Table = ({
         style={maxHeightStyle ? { maxHeight: maxHeightStyle } : undefined}
       >
         <table
-          className={cn("table-fixed w-full divide-y divide-border", className)}
+          className={cn("w-full table-fixed divide-y divide-border", className)}
           data-streamdown="table"
           {...props}
         >
