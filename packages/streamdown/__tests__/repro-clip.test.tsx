@@ -14,7 +14,8 @@ const finalText = `Práci mohu zkorigovat hned; pro přesnější hodnocení pot
 **Jaká kritéria** hodnocení mám použít?`;
 
 function simulateStream(full: string, step = 4) {
-  let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null = null;
+  let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null =
+    null;
   const frames: string[][] = [];
   for (let i = step; i <= full.length; i += step) {
     const slice = full.slice(0, i);
@@ -54,13 +55,14 @@ describe("clip repro", () => {
   });
 
   it("remend of trailing block alone does not clip", () => {
-    const tail = `**Jaká kritéria** hodnocení mám použít?`;
+    const tail = "**Jaká kritéria** hodnocení mám použít?";
     expect(remend(tail)).toContain("mám použít?");
   });
 
   it("brute force: incremental stream across chunk sizes keeps last typed word", () => {
     for (let step = 1; step <= 7; step += 1) {
-      let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null = null;
+      let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null =
+        null;
       for (let i = step; i <= finalText.length; i += step) {
         const slice = finalText.slice(0, i);
         state = parseMarkdownIntoBlocksIncremental(slice, state);
@@ -72,7 +74,9 @@ describe("clip repro", () => {
         const typedWords = slice.match(/[\p{L}\p{N}]+/gu) ?? [];
         const lastWord = typedWords.at(-1);
         if (lastWord && lastWord.length >= 3) {
-          expect(joined, `step=${step} i=${i} missing "${lastWord}"`).toContain(lastWord);
+          expect(joined, `step=${step} i=${i} missing "${lastWord}"`).toContain(
+            lastWord
+          );
         }
       }
     }
@@ -93,7 +97,7 @@ describe("clip repro", () => {
         literalTagContent: ["vfs-cite"],
         components: { "vfs-cite": VfsCite },
       },
-      `před citací. <vfs-cite path="/conversation/a.pdf" pages="1-3" /> a pokračujeme dál.`,
+      `před citací. <vfs-cite path="/conversation/a.pdf" pages="1-3" /> a pokračujeme dál.`
     );
     const html = renderToStaticMarkup(el as never);
     expect(html).toContain("CITE:/conversation/a.pdf");
@@ -105,11 +109,13 @@ describe("clip repro", () => {
     const { renderToStaticMarkup } = await import("react-dom/server");
     const { createElement } = await import("react");
     const { Markdown } = await import("../lib/markdown");
-    const { defaultRehypePlugins } = await import("../index");
     const rehypeRaw = (await import("rehype-raw")).default;
     const mod = (await import("rehype-sanitize")) as never as {
       default: unknown;
-      defaultSchema: Record<string, unknown> & { tagNames?: string[]; attributes?: Record<string, unknown> };
+      defaultSchema: Record<string, unknown> & {
+        tagNames?: string[];
+        attributes?: Record<string, unknown>;
+      };
     };
     const rehypeSanitize = mod.default;
     const defaultSchema = mod.defaultSchema;
@@ -117,10 +123,17 @@ describe("clip repro", () => {
     const schema = {
       ...defaultSchema,
       tagNames: [...(defaultSchema.tagNames ?? []), "vfs-cite"],
-      attributes: { ...defaultSchema.attributes, "vfs-cite": ["path", "pages"] },
+      attributes: {
+        ...defaultSchema.attributes,
+        "vfs-cite": ["path", "pages"],
+      },
     };
     const VfsCite = (props: Record<string, unknown>) =>
-      createElement("span", { "data-vfs": props.path }, `CITE:${String(props.path)}`);
+      createElement(
+        "span",
+        { "data-vfs": props.path },
+        `CITE:${String(props.path)}`
+      );
 
     const el = Markdown({
       children: `před. <vfs-cite path="/conversation/a.pdf" pages="1-3" /> po.`,
@@ -152,10 +165,14 @@ A tohle je další odstavec, který musí zůstat viditelný.`;
     const remendedA = blocksA.slice();
     remendedA[remendedA.length - 1] = remend(remendedA.at(-1) ?? "");
     // Resume: parse the full text incrementally from partA state.
-    let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null = null;
+    let state: ReturnType<typeof parseMarkdownIntoBlocksIncremental> | null =
+      null;
     state = parseMarkdownIntoBlocksIncremental(partA, state);
     for (let i = 1; i <= partB.length; i += 1) {
-      state = parseMarkdownIntoBlocksIncremental(partA + partB.slice(0, i), state);
+      state = parseMarkdownIntoBlocksIncremental(
+        partA + partB.slice(0, i),
+        state
+      );
     }
     const joined = state.blocks.join("");
     expect(joined).toContain("jakou úroveň");

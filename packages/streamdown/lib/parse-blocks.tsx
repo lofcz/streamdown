@@ -158,7 +158,10 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
         // never-closed HTML block and drop them from rendering.
         const openTags = countNonSelfClosingOpenTags(currentBlock, tagName);
         const closeTags = countClosingTags(currentBlock, tagName);
-        if (openTags > closeTags && !isSelfClosingTagBlock(currentBlock, tagName)) {
+        if (
+          openTags > closeTags &&
+          !isSelfClosingTagBlock(currentBlock, tagName)
+        ) {
           // There is at least one unmatched opening tag, keep track of it
           htmlStack.push(tagName);
         }
