@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"@lofcz/streamdown": minor
 ---
 
 Add `listStyle` prop for hierarchical bullet styling in nested lists.
