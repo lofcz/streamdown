@@ -257,9 +257,11 @@ const defaultSanitizeSchema = {
       "viewBox",
       "width",
       "height",
+      "fill",
       "ariaHidden",
     ],
-    path: [...(defaultSchema.attributes?.path ?? []), "d"],
+    // HAST camelCase form of `fill-rule` for per-path evenodd (warning icon).
+    path: [...(defaultSchema.attributes?.path ?? []), "d", "fillRule"],
   },
   tagNames: [...(defaultSchema.tagNames ?? []), "svg", "path"],
 };

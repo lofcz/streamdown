@@ -250,6 +250,25 @@ const MemoLi = memo<LiProps>(
         ? (soleChild.props as { children?: LiProps["children"] }).children
         : children;
 
+    // GFM task list item (`- [x]`) carries its own checkbox — suppress the
+    // bullet marker so the box isn't preceded by a stray dot, and lay the
+    // checkbox + label out on one line with proper spacing.
+    if (className?.includes("task-list-item")) {
+      return (
+        <li
+          className={cn(
+            "my-1 flex list-none items-center gap-2 [&>input]:m-0 [&>p]:inline",
+            className
+          )}
+          data-depth={depth > 0 ? depth - 1 : 0}
+          data-streamdown="list-item"
+          {...props}
+        >
+          {normalizedChildren}
+        </li>
+      );
+    }
+
     return (
       <li
         className={cn("py-1 [&>p]:inline", bulletClass, className)}

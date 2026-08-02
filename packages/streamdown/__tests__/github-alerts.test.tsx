@@ -179,6 +179,21 @@ describe("remarkGithubAlerts", () => {
     expect(alert?.className).toContain("border-l-red-600");
   });
 
+  it("renders the warning icon as an outlined triangle (evenodd, currentColor)", () => {
+    const content = "> [!WARNING]\n> Body";
+    const { container } = render(<Streamdown children={content} />);
+    const svg = container.querySelector(".markdown-alert-warning svg");
+    // Inherits the (per-kind) title color.
+    expect(svg?.getAttribute("fill")).toBe("currentColor");
+    const paths = svg?.querySelectorAll("path");
+    expect(paths && paths.length >= 1).toBe(true);
+    // Outlined triangle needs an evenodd subpath, not a solid fill.
+    const hasEvenodd = [...(paths ?? [])].some(
+      (p) => p.getAttribute("fill-rule") === "evenodd"
+    );
+    expect(hasEvenodd).toBe(true);
+  });
+
   it("handles streaming incomplete alert marker safely", () => {
     const { rerender, container } = render(
       <Markdown children="[!" remarkPlugins={[remarkGithubAlerts]} />
