@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.9.0
+
+### Minor Changes
+
+- f50bf5d: GFM alerts: render octicons as inline SVG (fix sanitize stripping `d`/`width`/`height`/`aria-hidden` so icons no longer need octicon CSS), apply per-kind colored border/background/title accents, and localize the alert title (Note/Tip/Important/Warning/Caution) via the `translations` prop.
+
 ## 2.8.1
 
 ### Patch Changes
