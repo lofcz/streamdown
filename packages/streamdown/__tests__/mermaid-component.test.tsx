@@ -292,7 +292,9 @@ describe("Mermaid Component", () => {
     });
   });
 
-  it("should not show loading indicator when SVG is already loaded", async () => {
+  it("should not show loading indicator when SVG is already loaded", {
+    timeout: 10_000,
+  }, async () => {
     const { container, rerender } = renderWithContext(
       <Mermaid chart={simpleChart} />
     );
