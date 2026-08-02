@@ -1,5 +1,12 @@
 # streamdown
 
+## 2.9.1
+
+### Patch Changes
+
+- 2ee6f2a: GFM task lists: stop rendering a stray bullet marker before the checkbox, lay the checkbox and label out on one line with proper spacing (`flex items-center gap-2`, compact `my-1`), and keep regular unordered items bulleted.
+- 2ee6f2a: GFM alerts: render the warning icon as an outlined triangle (split evenodd path instead of a solid fill) and give every alert icon `fill="currentColor"` so it matches its per-kind title color.
+
 ## 2.9.0
 
 ### Minor Changes
