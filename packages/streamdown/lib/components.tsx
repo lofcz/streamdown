@@ -34,6 +34,7 @@ import {
   StreamdownContext,
 } from "./streamdown-context";
 import { Table } from "./table";
+import { useTranslations } from "./translations-context";
 
 const START_LINE_PATTERN = /startLine=(\d+)/;
 const NO_LINE_NUMBERS_PATTERN = /\bnoLineNumbers\b/;
@@ -690,15 +691,36 @@ const MemoSup = memo<SupProps>(
 MemoSup.displayName = "MarkdownSup";
 
 type DivProps = WithNode<JSX.IntrinsicElements["div"]>;
+
+// GitHub alert accent colors (note/tip/important/warning/caution), so the
+// border + background are themed without requiring the standalone styles.css
+// (which consumers often don't import).
+const ALERT_KIND_CLASSES: Record<string, string> = {
+  "markdown-alert-note":
+    "border-l-blue-500 bg-blue-500/5 [&_.markdown-alert-title]:text-blue-600 dark:[&_.markdown-alert-title]:text-blue-400",
+  "markdown-alert-tip":
+    "border-l-green-600 bg-green-600/5 [&_.markdown-alert-title]:text-green-700 dark:[&_.markdown-alert-title]:text-green-400",
+  "markdown-alert-important":
+    "border-l-purple-600 bg-purple-600/5 [&_.markdown-alert-title]:text-purple-700 dark:[&_.markdown-alert-title]:text-purple-400",
+  "markdown-alert-warning":
+    "border-l-amber-600 bg-amber-600/5 [&_.markdown-alert-title]:text-amber-700 dark:[&_.markdown-alert-title]:text-amber-400",
+  "markdown-alert-caution":
+    "border-l-red-600 bg-red-600/5 [&_.markdown-alert-title]:text-red-700 dark:[&_.markdown-alert-title]:text-red-400",
+};
+
 const MemoDiv = memo<DivProps>(
   ({ children, className, node, ...props }: DivProps) => {
     const cn = useCn();
     const isAlert = className?.includes("markdown-alert");
     if (isAlert) {
+      const kindClass = Object.keys(ALERT_KIND_CLASSES).find((k) =>
+        className?.includes(k)
+      );
       return (
         <div
           className={cn(
             "my-4 rounded-r-md border-muted-foreground/30 border-l-4 bg-muted/40 px-4 py-3 [&>p:last-child]:mb-0",
+            kindClass ? ALERT_KIND_CLASSES[kindClass] : null,
             className
           )}
           {...props}
@@ -1069,23 +1091,70 @@ const MemoImg = memo<
 MemoImg.displayName = "MarkdownImg";
 
 type ParagraphProps = WithNode<JSX.IntrinsicElements["p"]>;
-const MemoParagraph = memo<ParagraphProps>(
+
+// Map `data-alert-type` → Streamdown translation key so the alert title can
+// be localized via the `translations` prop.
+const ALERT_TYPE_TO_TRANSLATION = {
+  caution: "alertCaution",
+  important: "alertImportant",
+  note: "alertNote",
+  tip: "alertTip",
+  warning: "alertWarning",
+} as const;
+type AlertType = keyof typeof ALERT_TYPE_TO_TRANSLATION;
+
+const MemoAlertTitle = memo<ParagraphProps>(
   ({ children, className, node, ...props }: ParagraphProps) => {
     const cn = useCn();
+    const translations = useTranslations();
 
     // GitHub alert title — `<p class="markdown-alert-title">` with an octicon.
     // Style it like GitHub: flex row, semibold, icon colored per alert kind.
+    // The title text is localized via the `translations` prop, keyed by
+    // `data-alert-type` (emitted by remarkGithubAlerts).
+    const alertType = (props as Record<string, unknown>)["data-alert-type"] as
+      | AlertType
+      | undefined;
+    const translationKey =
+      alertType && alertType in ALERT_TYPE_TO_TRANSLATION
+        ? ALERT_TYPE_TO_TRANSLATION[alertType]
+        : undefined;
+    const localized = translationKey ? translations[translationKey] : undefined;
+
+    // Replace the default (English) title text node with the localized label,
+    // keeping the leading octicon element.
+    let content = children;
+    if (localized) {
+      const childArray = Array.isArray(children) ? children : [children];
+      const rest = childArray.filter(
+        (c) => !(typeof c === "string" && c.trim().length > 0)
+      );
+      content = [...rest, localized];
+    }
+
+    return (
+      <p
+        className={cn(
+          "mb-1 flex items-center gap-2 font-semibold [&>svg]:inline-block",
+          className
+        )}
+        {...props}
+      >
+        {content}
+      </p>
+    );
+  },
+  (p, n) => sameClassAndNode(p, n)
+);
+MemoAlertTitle.displayName = "MarkdownAlertTitle";
+
+const MemoParagraph = memo<ParagraphProps>(
+  ({ children, className, node, ...props }: ParagraphProps) => {
     if (className?.includes("markdown-alert-title")) {
       return (
-        <p
-          className={cn(
-            "mb-1 flex items-center gap-2 font-semibold [&>svg]:inline-block",
-            className
-          )}
-          {...props}
-        >
+        <MemoAlertTitle className={className} node={node} {...props}>
           {children}
-        </p>
+        </MemoAlertTitle>
       );
     }
 

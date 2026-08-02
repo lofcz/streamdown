@@ -92,7 +92,10 @@ const buildTitleParagraph = (def: AlertDef): Paragraph =>
     ],
     data: {
       hName: "p",
-      hProperties: { className: ["markdown-alert-title"] },
+      hProperties: {
+        className: ["markdown-alert-title"],
+        "data-alert-type": def.kind,
+      },
     },
   }) as Paragraph;
 

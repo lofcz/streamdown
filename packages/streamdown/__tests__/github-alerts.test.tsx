@@ -39,6 +39,19 @@ describe("remarkGithubAlerts", () => {
     expect(title?.textContent).toBe("Note");
   });
 
+  it("renders the octicon as a fully inlined SVG (path data survives sanitize)", () => {
+    const content = "> [!NOTE]\n> Body";
+    const { container } = render(<Streamdown children={content} />);
+    const path = container.querySelector("p.markdown-alert-title svg path");
+    // `d` must not be stripped by rehype-sanitize, otherwise the icon is empty.
+    expect(path?.getAttribute("d")).toBeTruthy();
+    expect(path?.getAttribute("d")).toContain("M0 8a8 8");
+    const svg = container.querySelector("p.markdown-alert-title svg");
+    expect(svg?.getAttribute("viewBox")).toBe("0 0 16 16");
+    expect(svg?.getAttribute("width")).toBe("16");
+    expect(svg?.getAttribute("height")).toBe("16");
+  });
+
   it("splits title and body correctly through the full Streamdown pipeline", () => {
     const content =
       "> [!NOTE]\n> Užitečné informace, které by uživatel neměl přehlédnout, i když jsou doplňkové.\n> .";
@@ -133,6 +146,37 @@ describe("remarkGithubAlerts", () => {
     expect(container.querySelector(".markdown-alert-note")).toBeTruthy();
     expect(container.querySelector(".markdown-alert-tip")).toBeFalsy();
     expect(container.querySelector("blockquote")).toBeTruthy();
+  });
+
+  it("localizes the alert title via the translations prop", () => {
+    const content = "> [!WARNING]\n> Pozor";
+    const { container } = render(
+      <Streamdown
+        children={content}
+        translations={{ alertWarning: "Varování" }}
+      />
+    );
+    const title = container.querySelector("p.markdown-alert-title");
+    expect(title?.textContent).toBe("Varování");
+    // Octicon still rendered alongside the localized label.
+    expect(title?.querySelector("svg.octicon")).toBeTruthy();
+  });
+
+  it("falls back to the default English title without translations", () => {
+    const content = "> [!TIP]\n> Body";
+    const { container } = render(<Streamdown children={content} />);
+    expect(container.querySelector("p.markdown-alert-title")?.textContent).toBe(
+      "Tip"
+    );
+  });
+
+  it("applies a per-kind colored border class to the alert container", () => {
+    const content = "> [!CAUTION]\n> Body";
+    const { container } = render(<Streamdown children={content} />);
+    const alert = container.querySelector(".markdown-alert-caution");
+    expect(alert).toBeTruthy();
+    // Per-kind accent class from ALERT_KIND_CLASSES.
+    expect(alert?.className).toContain("border-l-red-600");
   });
 
   it("handles streaming incomplete alert marker safely", () => {

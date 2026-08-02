@@ -3,6 +3,12 @@
 import { createContext, useContext } from "react";
 
 export interface StreamdownTranslations {
+  // GitHub alert titles
+  alertCaution: string;
+  alertImportant: string;
+  alertNote: string;
+  alertTip: string;
+  alertWarning: string;
   // Link modal
   close: string;
   copied: string;
@@ -40,6 +46,12 @@ export interface StreamdownTranslations {
 }
 
 export const defaultTranslations: StreamdownTranslations = {
+  // GitHub alert titles
+  alertNote: "Note",
+  alertTip: "Tip",
+  alertImportant: "Important",
+  alertWarning: "Warning",
+  alertCaution: "Caution",
   // Code block
   copyCode: "Copy Code",
   downloadFile: "Download file",
