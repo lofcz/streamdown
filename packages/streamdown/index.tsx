@@ -28,7 +28,7 @@ import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
-import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
+import { hasIncompleteCodeFence } from "./lib/incomplete-code-utils";
 import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
 import {
   type IncrementalParseState,
@@ -913,22 +913,14 @@ export const Streamdown = memo(
       ]
     );
 
-    const shouldHideCaret = useMemo(() => {
-      if (!isAnimating || blocksToRender.length === 0) {
-        return false;
-      }
-      const lastBlock = blocksToRender.at(-1) as string;
-      return hasIncompleteCodeFence(lastBlock) || hasTable(lastBlock);
-    }, [isAnimating, blocksToRender]);
-
     const style = useMemo(
       () =>
-        caret && isAnimating && !shouldHideCaret
+        caret && isAnimating
           ? ({
               "--streamdown-caret": `"${carets[caret]}"`,
             } as CSSProperties)
           : undefined,
-      [caret, isAnimating, shouldHideCaret]
+      [caret, isAnimating]
     );
 
     // Helper: lazily create a per-block animate plugin and return the
@@ -1017,11 +1009,12 @@ export const Streamdown = memo(
                   className={prefixedCn(
                     // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                     "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-                    caret && !shouldHideCaret
+                    caret
                       ? "[&>*:last-child]:after:inline [&>*:last-child]:after:align-baseline [&>*:last-child]:after:content-[var(--streamdown-caret)]"
                       : null,
                     className
                   )}
+                  data-streamdown="container"
                   style={style}
                 >
                   {blocksToRender.length === 0 && caret && isAnimating && (
