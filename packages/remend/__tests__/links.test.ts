@@ -115,10 +115,12 @@ describe("link handling with linkMode: text-only", () => {
   });
 
   it("should handle nested brackets without matching closing bracket", () => {
+    // Healing runs to a fixed point, so every unmatched bracket is resolved
+    // in one call rather than one per call
     expect(remend("Text [outer [inner", textOnlyOptions)).toBe(
-      "Text outer [inner"
+      "Text outer inner"
     );
-    expect(remend("[foo [bar [baz", textOnlyOptions)).toBe("foo [bar [baz");
+    expect(remend("[foo [bar [baz", textOnlyOptions)).toBe("foo bar baz");
     expect(remend("Text [outer [inner]", textOnlyOptions)).toBe(
       "Text outer [inner]"
     );
