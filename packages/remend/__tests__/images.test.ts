@@ -14,9 +14,13 @@ describe("image handling", () => {
     expect(remend(text)).toBe(text);
   });
 
-  it("should preserve a hard-break double space before a removed image", () => {
-    // Only a single exposed space is stripped. A double space is a markdown hard break and survives.
-    expect(remend("line one  ![partial")).toBe("line one  ");
+  it("should preserve preceding whitespace before an incomplete image", () => {
+    // Our fork replaces incomplete images with a placeholder rather than
+    // removing them, so preceding whitespace (single or hard-break double
+    // space) is left untouched.
+    expect(remend("line one  ![partial")).toBe(
+      "line one  ![partial](streamdown:incomplete-image)"
+    );
   });
 
   it("should handle partial image at chunk boundary", () => {
