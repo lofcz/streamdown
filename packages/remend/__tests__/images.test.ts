@@ -14,6 +14,12 @@ describe("image handling", () => {
     expect(remend(text)).toBe(text);
   });
 
+  it("should preserve a hard-break double space before a removed image", () => {
+    // Only a single exposed space is stripped. A double space is a markdown
+    // hard break and survives, matching the input-side rule.
+    expect(remend("line one  ![partial")).toBe("line one  ");
+  });
+
   it("should handle partial image at chunk boundary", () => {
     expect(remend("See ![the diag")).toBe(
       "See ![the diag](streamdown:incomplete-image)"
