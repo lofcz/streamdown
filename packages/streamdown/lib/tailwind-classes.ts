@@ -9,6 +9,8 @@
 export const STREAMDOWN_CLASSES: readonly string[] = [
   "-mt-10",
   "[&>p]:inline",
+  "[&>p:last-child]:mb-0",
+  "[&>svg]:inline-block",
   "[&_svg]:h-auto",
   "[&_svg]:w-auto",
   "[counter-increment:line_0]",
@@ -150,6 +152,7 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
   "rounded-full",
   "rounded-lg",
   "rounded-md",
+  "rounded-r-md",
   "rounded-xl",
   "shadow-lg",
   "shadow-sm",

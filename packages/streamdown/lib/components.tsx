@@ -23,12 +23,14 @@ import { CodeBlockSkeleton } from "./code-block/skeleton";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
+import { Markdown } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
 // BundledLanguage type removed - we now support any language string
 import {
+  type CalloutStyleResolver,
   type ControlsConfig,
   type ListStylePreset,
   StreamdownContext,
@@ -711,6 +713,81 @@ MemoSup.displayName = "MarkdownSup";
 
 type DivProps = WithNode<JSX.IntrinsicElements["div"]>;
 
+/**
+ * Default custom-callout style: a neutral tint + accent. Consumers usually
+ * override this with a `color-mix(in oklch, <color> …)` tint that adapts the
+ * percentage to the color's strength (see sciobot's StreamdownContent).
+ */
+const defaultCalloutStyle: CalloutStyleResolver = () => ({});
+
+/** Decode the base64 body emitted by remarkContainerAlerts (UTF-8 safe). */
+const decodeCalloutBody = (encoded: string): string => {
+  try {
+    const binary = atob(encoded);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return "";
+  }
+};
+
+const MemoCallout = memo<DivProps>(
+  ({ children, className, node, ...props }: DivProps) => {
+    const cn = useCn();
+    const {
+      calloutIcon,
+      calloutStyle,
+      components,
+      remarkPlugins,
+      rehypePlugins,
+    } = useContext(StreamdownContext);
+    const data = props as Record<string, unknown>;
+    const title = data["data-callout-title"] as string | undefined;
+    const color = data["data-callout-color"] as string | undefined;
+    const icon = data["data-callout-icon"] as string | undefined;
+    const encodedBody = data["data-callout-body"] as string | undefined;
+    const body = encodedBody ? decodeCalloutBody(encodedBody) : "";
+
+    const style = (calloutStyle ?? defaultCalloutStyle)(color);
+    const iconNode = icon && calloutIcon ? calloutIcon(icon) : null;
+
+    // The body markdown is re-parsed so nested markdown/lists/math render.
+    // components/remarkPlugins/rehypePlugins come from context — the same
+    // references as the outer Markdown pass, so the processor cache hits and
+    // the callout body renders identically to top-level content.
+
+    return (
+      <div
+        className={cn(
+          "my-4 rounded-md border-l-4 px-4 py-3 [&>p:last-child]:mb-0",
+          className
+        )}
+        style={style}
+        data-streamdown="callout"
+        {...props}
+      >
+        {title !== undefined ? (
+          <p className="mb-1 flex items-center gap-2 font-semibold [&>svg]:inline-block">
+            {iconNode}
+            {title}
+          </p>
+        ) : null}
+        {body.trim().length > 0 ? (
+          <Markdown
+            components={components}
+            rehypePlugins={rehypePlugins}
+            remarkPlugins={remarkPlugins}
+          >
+            {body}
+          </Markdown>
+        ) : null}
+      </div>
+    );
+  },
+  (p, n) => sameClassAndNode(p, n)
+);
+MemoCallout.displayName = "MarkdownCallout";
+
 // GitHub alert accent colors (note/tip/important/warning/caution), so the
 // border + background are themed without requiring the standalone styles.css
 // (which consumers often don't import).
@@ -731,6 +808,14 @@ const MemoDiv = memo<DivProps>(
   ({ children, className, node, ...props }: DivProps) => {
     const cn = useCn();
     const isAlert = className?.includes("markdown-alert");
+    const isCallout = className?.includes("sdm-callout");
+    if (isCallout) {
+      return (
+        <MemoCallout className={className} node={node} {...props}>
+          {children}
+        </MemoCallout>
+      );
+    }
     if (isAlert) {
       const kindClass = Object.keys(ALERT_KIND_CLASSES).find((k) =>
         className?.includes(k)

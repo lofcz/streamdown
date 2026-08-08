@@ -43,8 +43,14 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import {
+  extractCallouts,
+  remarkContainerAlerts,
+} from "./lib/remark/container-alerts";
 import { remarkGithubAlerts } from "./lib/remark/github-alerts";
 import {
+  type CalloutIconResolver,
+  type CalloutStyleResolver,
   type ControlsConfig,
   type LinkSafetyConfig,
   type ListStylePreset,
@@ -100,6 +106,8 @@ export type {
   ThemeInput,
 } from "./lib/plugin-types";
 export type {
+  CalloutIconResolver,
+  CalloutStyleResolver,
   ControlsConfig,
   LinkSafetyConfig,
   LinkSafetyModalProps,
@@ -179,6 +187,10 @@ export type StreamdownProps = Options & {
   caret?: keyof typeof carets;
   /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
   listStyle?: ListStylePreset;
+  /** Icon resolver for custom callouts (`>>> (icon)[Title]{color}`). Return null/undefined for a blank placeholder. */
+  calloutIcon?: CalloutIconResolver;
+  /** Style resolver for custom callouts — computes the tinted background + accent border/title color. */
+  calloutStyle?: CalloutStyleResolver;
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
@@ -240,8 +252,14 @@ const defaultSanitizeSchema = {
       ...(defaultSchema.attributes?.div ?? []),
       [
         "className",
-        /^(markdown-alert|markdown-alert-(note|tip|important|warning|caution))$/,
+        /^(markdown-alert|markdown-alert-(note|tip|important|warning|caution)|sdm-callout)$/,
       ],
+      // Custom container callouts (`>>> [Title]{color}`) — emitted by
+      // remarkContainerAlerts; the body markdown is re-parsed by MemoCallout.
+      "dataCalloutTitle",
+      "dataCalloutColor",
+      "dataCalloutIcon",
+      "dataCalloutBody",
     ],
     p: [
       ...(defaultSchema.attributes?.p ?? []),
@@ -284,6 +302,9 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
   githubAlerts: remarkGithubAlerts,
+  // Runs after githubAlerts so `>` blockquotes (GFM alerts) and `>>>`
+  // callouts don't conflict — both transform blockquote nodes.
+  containerAlerts: remarkContainerAlerts,
   codeMeta: remarkCodeMeta,
 } as const;
 
@@ -485,6 +506,8 @@ export const Streamdown = memo(
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
     listStyle = "hierarchical",
+    calloutIcon,
+    calloutStyle,
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
@@ -571,6 +594,13 @@ export const Streamdown = memo(
       if (allowedTagNames.length > 0) {
         result = preprocessCustomTags(result, allowedTagNames);
       }
+
+      // Extract `>>> ... <<<` callouts into single-line placeholder <div>s.
+      // Must run BEFORE the streaming block-splitter (parseMarkdownIntoBlocks),
+      // which would otherwise split a container at a list/blank line and
+      // truncate the body. This rewrite is idempotent and append-stable, so
+      // settled blocks stay byte-identical and the incremental cache holds.
+      result = extractCallouts(result);
 
       return result;
     }, [children, allowedTagNames, literalTagContent]);
@@ -733,35 +763,6 @@ export const Streamdown = memo(
       [blocksToRender.length, generatedId]
     );
 
-    // Combined context value - single object reduces React tree overhead
-    const contextValue = useMemo<StreamdownContextType>(
-      () => ({
-        codeBlockMaxHeight,
-        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
-        controls,
-        isAnimating,
-        lineNumbers,
-        listStyle,
-        mode,
-        mermaid,
-        linkSafety,
-        tableMaxHeight,
-      }),
-      [
-        codeBlockMaxHeight,
-        shikiTheme,
-        controls,
-        isAnimating,
-        lineNumbers,
-        listStyle,
-        mode,
-        mermaid,
-        linkSafety,
-        plugins?.code,
-        tableMaxHeight,
-      ]
-    );
-
     // Stable key derived from translations values so inline objects don't
     // defeat memoization (same pattern used for `animated` above).
     const translationsKey = useMemo(
@@ -863,6 +864,45 @@ export const Streamdown = memo(
       allowedTagNames,
       literalTagContent,
     ]);
+
+    // Combined context value - single object reduces React tree overhead
+    const contextValue = useMemo<StreamdownContextType>(
+      () => ({
+        calloutIcon,
+        calloutStyle,
+        codeBlockMaxHeight,
+        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
+        controls,
+        isAnimating,
+        lineNumbers,
+        listStyle,
+        mode,
+        mermaid,
+        linkSafety,
+        tableMaxHeight,
+        components: mergedComponents,
+        remarkPlugins: mergedRemarkPlugins,
+        rehypePlugins: mergedRehypePlugins,
+      }),
+      [
+        calloutIcon,
+        calloutStyle,
+        codeBlockMaxHeight,
+        shikiTheme,
+        controls,
+        isAnimating,
+        lineNumbers,
+        listStyle,
+        mode,
+        mermaid,
+        linkSafety,
+        plugins?.code,
+        tableMaxHeight,
+        mergedComponents,
+        mergedRemarkPlugins,
+        mergedRehypePlugins,
+      ]
+    );
 
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {
@@ -1028,6 +1068,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    prevProps.calloutIcon === nextProps.calloutIcon &&
+    prevProps.calloutStyle === nextProps.calloutStyle &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===

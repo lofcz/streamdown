@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext } from "react";
+import { type CSSProperties, createContext } from "react";
+import type { PluggableList } from "unified";
+import type { Components } from "./markdown";
 import type { MermaidConfig, ThemeInput } from "./plugin-types";
 
 export type ControlsConfig =
@@ -66,8 +68,26 @@ export interface MermaidOptions {
  */
 export type ListStylePreset = "flat" | "hierarchical";
 
+/**
+ * Resolves a custom-callout icon name (`>>> (heart)[Title]`) to a node.
+ * Consumer supplies e.g. lucide's DynamicIcon; return `null`/`undefined`
+ * for a blank placeholder while the icon chunk loads.
+ */
+export type CalloutIconResolver = (name: string) => React.ReactNode;
+
+/**
+ * Computes the inline style (background tint + accent border/title color)
+ * for a custom callout from its optional `{color}` value. Default is a
+ * neutral `color-mix()` tint (see components.tsx).
+ */
+export type CalloutStyleResolver = (color?: string) => CSSProperties;
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  /** Icon resolver for custom callouts (`>>> (icon)[Title]{color}`). */
+  calloutIcon?: CalloutIconResolver;
+  /** Style resolver for custom callouts (background tint + accent). */
+  calloutStyle?: CalloutStyleResolver;
   /** Max height for code blocks (px number or CSS length). `0` / `Infinity` disables. @default 400 */
   codeBlockMaxHeight?: number | string;
   controls: ControlsConfig;
@@ -82,6 +102,10 @@ export interface StreamdownContextType {
   shikiTheme: [ThemeInput, ThemeInput];
   /** Max height for tables (px number or CSS length). `0` / `Infinity` disables. @default 300 */
   tableMaxHeight?: number | string;
+  /** Merged components/plugins so custom renderers (e.g. callout body) can re-parse nested markdown identically to the outer pass. */
+  components?: Components;
+  remarkPlugins?: PluggableList;
+  rehypePlugins?: PluggableList;
 }
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
