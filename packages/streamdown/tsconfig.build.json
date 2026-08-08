@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "paths": {
+      "mdast": ["./node_modules/@types/mdast/index.d.ts"],
+      "unist": ["./node_modules/@types/unist/index.d.ts"]
+    }
+  },
+  "include": ["index.tsx", "lib"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "__tests__",
+    "__benchmarks__",
+    "scripts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.bench.ts"
+  ]
+}

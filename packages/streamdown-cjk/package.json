@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/build.mjs",
     "test": "vitest run",
     "test:coverage": "vitest --coverage run"
   },

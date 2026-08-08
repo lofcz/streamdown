@@ -60,7 +60,16 @@ interface MarkdownPosition {
 interface MarkdownNode {
   position?: MarkdownPosition;
   properties?: { className?: string; metastring?: string };
+  tagName?: string;
 }
+
+type ElementProps = Record<string, unknown> & {
+  children?: React.ReactNode;
+  node?: MarkdownNode;
+};
+
+const propsOf = (element: React.ReactElement): ElementProps =>
+  element.props as ElementProps;
 
 type WithNode<T> = T & {
   node?: MarkdownNode;
@@ -243,13 +252,13 @@ const MemoLi = memo<LiProps>(
     // components mean `type === "p"` is unreliable — also check hast tagName.
     const soleChild = childArray[0];
     const soleChildTag = isValidElement(soleChild)
-      ? (soleChild.props as { node?: MarkdownNode }).node?.tagName
+      ? propsOf(soleChild).node?.tagName
       : undefined;
     const normalizedChildren =
       childArray.length === 1 &&
       isValidElement(soleChild) &&
       (soleChild.type === "p" || soleChildTag === "p")
-        ? (soleChild.props as { children?: LiProps["children"] }).children
+        ? (propsOf(soleChild) as { children?: LiProps["children"] }).children
         : children;
 
     // GFM task list item (`- [x]`) carries its own checkbox — suppress the
@@ -878,9 +887,10 @@ const MemoSection = memo<SectionProps>(
           return false;
         }
 
-        const itemChildren = Array.isArray(listItem.props.children)
-          ? listItem.props.children
-          : [listItem.props.children];
+        const listItemChildren = propsOf(listItem).children;
+        const itemChildren = Array.isArray(listItemChildren)
+          ? listItemChildren
+          : [listItemChildren];
 
         // Check if all children are either whitespace or backref links
         let hasContent = false;
@@ -898,14 +908,15 @@ const MemoSection = memo<SectionProps>(
             }
           } else if (isValidElement(itemChild)) {
             // Check if it's a backref link
-            if (itemChild.props?.["data-footnote-backref"] !== undefined) {
+            if (propsOf(itemChild)["data-footnote-backref"] !== undefined) {
               hasBackref = true;
             } else {
               // It's some other element (like <p>), which means it has content
               // But we need to check if the <p> has actual content
-              const grandChildren = Array.isArray(itemChild.props.children)
-                ? itemChild.props.children
-                : [itemChild.props.children];
+              const itemChildChildren = propsOf(itemChild).children;
+              const grandChildren = Array.isArray(itemChildChildren)
+                ? itemChildChildren
+                : [itemChildChildren];
 
               for (const grandChild of grandChildren) {
                 if (
@@ -917,7 +928,7 @@ const MemoSection = memo<SectionProps>(
                 }
                 if (
                   isValidElement(grandChild) &&
-                  grandChild.props?.["data-footnote-backref"] === undefined
+                  propsOf(grandChild)["data-footnote-backref"] === undefined
                 ) {
                   // If it's not a backref link, it's content
                   hasContent = true;
@@ -941,9 +952,10 @@ const MemoSection = memo<SectionProps>(
 
             // If this is an <ol> containing footnote list items
             if (child.type === MemoOl) {
-              const listChildren = Array.isArray(child.props.children)
-                ? child.props.children
-                : [child.props.children];
+              const olChildren = propsOf(child).children;
+              const listChildren = Array.isArray(olChildren)
+                ? olChildren
+                : [olChildren];
 
               const filteredListChildren = listChildren.filter(
                 (listItem: React.ReactNode) => !isEmptyFootnote(listItem)
@@ -958,7 +970,7 @@ const MemoSection = memo<SectionProps>(
               return {
                 ...child,
                 props: {
-                  ...child.props,
+                  ...propsOf(child),
                   children: filteredListChildren,
                 },
               };
@@ -1036,7 +1048,8 @@ const CodeComponent = ({
 
   // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
   const metastring = node?.properties?.metastring;
-  const startLineMatch = metastring?.match(START_LINE_PATTERN);
+  const metaText = typeof metastring === "string" ? metastring : undefined;
+  const startLineMatch = metaText?.match(START_LINE_PATTERN);
   const parsedStartLine = startLineMatch
     ? Number.parseInt(startLineMatch[1], 10)
     : undefined;
@@ -1046,21 +1059,18 @@ const CodeComponent = ({
       : undefined;
 
   // Parse noLineNumbers from meta string and derive effective lineNumbers
-  const metaNoLineNumbers = metastring
-    ? NO_LINE_NUMBERS_PATTERN.test(metastring)
+  const metaNoLineNumbers = metaText
+    ? NO_LINE_NUMBERS_PATTERN.test(metaText)
     : false;
   const showLineNumbers = !metaNoLineNumbers && contextLineNumbers !== false;
 
   // Extract code content from children safely
   let code = "";
-  if (
-    isValidElement(children) &&
-    children.props &&
-    typeof children.props === "object" &&
-    "children" in children.props &&
-    typeof children.props.children === "string"
-  ) {
-    code = children.props.children;
+  if (isValidElement(children)) {
+    const childContent = propsOf(children).children;
+    if (typeof childContent === "string") {
+      code = childContent;
+    }
   } else if (typeof children === "string") {
     code = children;
   }
@@ -1073,7 +1083,7 @@ const CodeComponent = ({
           code={code}
           isIncomplete={isBlockIncomplete}
           language={language}
-          meta={metastring}
+          meta={metaText}
         />
       </Suspense>
     );
@@ -1278,7 +1288,7 @@ const MemoParagraph = memo<ParagraphProps>(
     // Check if there's exactly one child and it's a block-level element
     // (image or block code) to avoid wrapping in <p> which causes hydration errors
     if (validChildren.length === 1 && isValidElement(validChildren[0])) {
-      const node = (validChildren[0].props as { node?: MarkdownNode }).node;
+      const node = propsOf(validChildren[0]).node;
       const tagName = node?.tagName;
 
       // Image: renders as <div>, cannot be nested in <p>
@@ -1331,7 +1341,9 @@ export const components: Options["components"] = {
   img: MemoImg,
   pre: ({ children }) => {
     if (isValidElement(children)) {
-      return cloneElement(children, { "data-block": "true" });
+      return cloneElement(children, {
+        "data-block": "true",
+      } as Partial<unknown>);
     }
     return children;
   },
