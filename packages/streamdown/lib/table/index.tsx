@@ -1,6 +1,7 @@
 import { type ComponentProps, useContext, useEffect, useRef } from "react";
 import { StreamdownContext } from "../../index";
 import { useCn } from "../prefix-context";
+import { DefaultScrollable } from "../scrollable";
 import { resolveMaxHeight } from "../utils";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
@@ -25,7 +26,8 @@ export const Table = ({
   ...props
 }: TableProps) => {
   const cn = useCn();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, scrollable } = useContext(StreamdownContext);
+  const Scrollable = scrollable ?? DefaultScrollable;
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef<boolean>(true);
   const maxHeightStyle = resolveMaxHeight(maxHeight);
@@ -84,21 +86,29 @@ export const Table = ({
           ) : null}
         </div>
       ) : null}
-      <div
+      <Scrollable
         className={cn(
           "border-collapse overflow-x-auto overflow-y-auto rounded-md border border-border bg-background"
         )}
-        ref={scrollRef}
+        scrollRef={scrollRef}
         style={maxHeightStyle ? { maxHeight: maxHeightStyle } : undefined}
       >
         <table
-          className={cn("w-full table-fixed divide-y divide-border", className)}
+          className={cn(
+            // table-fixed keeps column widths stable while streaming (no
+            // reflow as rows arrive). w-full + min-w-max means: narrow tables
+            // still fill the row, but when nowrap header/body content is wider
+            // than the container the table grows to fit it and the scroll
+            // region scrolls — instead of squeezing columns until they overlap.
+            "w-full min-w-max table-fixed divide-y divide-border",
+            className
+          )}
           data-streamdown="table"
           {...props}
         >
           {children}
         </table>
-      </div>
+      </Scrollable>
     </div>
   );
 };

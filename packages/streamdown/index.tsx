@@ -55,6 +55,7 @@ import {
   type LinkSafetyConfig,
   type ListStylePreset,
   type MermaidOptions,
+  type ScrollableComponent,
   StreamdownContext,
   type StreamdownContextType,
 } from "./lib/streamdown-context";
@@ -105,6 +106,7 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export { DefaultScrollable } from "./lib/scrollable";
 export type {
   CalloutIconResolver,
   CalloutStyleResolver,
@@ -113,6 +115,8 @@ export type {
   LinkSafetyModalProps,
   MermaidErrorComponentProps,
   MermaidOptions,
+  ScrollableComponent,
+  ScrollableProps,
   StreamdownContextType,
 } from "./lib/streamdown-context";
 export { StreamdownContext } from "./lib/streamdown-context";
@@ -182,6 +186,8 @@ export type StreamdownProps = Options & {
   codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  /** Component used for horizontal-scroll regions (code body, table). Defaults to a plain div — override to plug in a custom scrollbar (e.g. OverlayScrollbars) declaratively. */
+  scrollable?: ScrollableComponent;
   tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
@@ -500,6 +506,7 @@ export const Streamdown = memo(
     codeBlockMaxHeight = 400,
     controls = true,
     isAnimating = false,
+    scrollable,
     tableMaxHeight = 300,
     animated,
     BlockComponent = Block,
@@ -879,6 +886,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        scrollable,
         tableMaxHeight,
         components: mergedComponents,
         remarkPlugins: mergedRemarkPlugins,
@@ -896,6 +904,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        scrollable,
         plugins?.code,
         tableMaxHeight,
         mergedComponents,

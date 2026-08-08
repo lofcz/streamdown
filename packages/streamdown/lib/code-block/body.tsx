@@ -10,6 +10,7 @@ import {
 import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { DefaultScrollable } from "../scrollable";
 import { cn as baseCn, resolveMaxHeight } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
@@ -67,7 +68,8 @@ export const CodeBlockBody = memo(
     ...rest
   }: CodeBlockBodyProps) => {
     const cn = useCn();
-    const { isAnimating } = useContext(StreamdownContext);
+    const { isAnimating, scrollable } = useContext(StreamdownContext);
+    const Scrollable = scrollable ?? DefaultScrollable;
     const scrollRef = useRef<HTMLDivElement>(null);
     const pinnedRef = useRef<boolean>(true);
     const maxHeightStyle = resolveMaxHeight(maxHeight);
@@ -125,7 +127,7 @@ export const CodeBlockBody = memo(
     }, [result.bg, result.fg, result.rootStyle]);
 
     return (
-      <div
+      <Scrollable
         className={cn(
           className,
           maxHeightStyle
@@ -135,7 +137,7 @@ export const CodeBlockBody = memo(
         )}
         data-language={language}
         data-streamdown="code-block-body"
-        ref={scrollRef}
+        scrollRef={scrollRef}
         style={maxHeightStyle ? { maxHeight: maxHeightStyle } : undefined}
         {...rest}
       >
@@ -222,7 +224,7 @@ export const CodeBlockBody = memo(
             ))}
           </code>
         </pre>
-      </div>
+      </Scrollable>
     );
   },
   (prevProps, nextProps) => {

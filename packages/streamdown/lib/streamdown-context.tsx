@@ -1,6 +1,11 @@
 "use client";
 
-import { type CSSProperties, createContext } from "react";
+import {
+  type ComponentProps,
+  type CSSProperties,
+  type ComponentType,
+  createContext,
+} from "react";
 import type { PluggableList } from "unified";
 import type { Components } from "./markdown";
 import type { MermaidConfig, ThemeInput } from "./plugin-types";
@@ -82,6 +87,24 @@ export type CalloutIconResolver = (name: string) => React.ReactNode;
  */
 export type CalloutStyleResolver = (color?: string) => CSSProperties;
 
+/**
+ * Props passed to the component used for a horizontal-scroll region
+ * (code-block body, table inner scroll). `scrollRef` must be attached to the
+ * actual scrolling element so Streamdown's auto-pin-on-stream logic keeps
+ * working.
+ */
+export type ScrollableProps = ComponentProps<"div"> & {
+  scrollRef?: React.Ref<HTMLDivElement>;
+};
+
+/**
+ * Component used to render a horizontal-scroll region (code-block body,
+ * table inner scroll). Defaults to a plain `<div>`; override to plug in a
+ * custom scrollbar implementation (e.g. OverlayScrollbars) declaratively,
+ * without DOM observers or per-element wiring.
+ */
+export type ScrollableComponent = ComponentType<ScrollableProps>;
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
   /** Icon resolver for custom callouts (`>>> (icon)[Title]{color}`). */
@@ -99,6 +122,8 @@ export interface StreamdownContextType {
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  /** Component used for horizontal-scroll regions (code body, table). @default plain div */
+  scrollable?: ScrollableComponent;
   shikiTheme: [ThemeInput, ThemeInput];
   /** Max height for tables (px number or CSS length). `0` / `Infinity` disables. @default 300 */
   tableMaxHeight?: number | string;
