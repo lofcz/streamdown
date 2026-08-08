@@ -8,4 +8,4 @@ A shared single-pass scanner now classifies fences and inline code spans, replac
 
 Double underscores are counted per maximal run with flanking rules, so identifiers containing `__` (like `snake__case`) no longer invent or swallow emphasis closers.
 
-Healing is now idempotent. Healed output re-heals to itself, including incomplete image removal and the trailing space it exposes.
+Healing is now idempotent. Healed output re-heals to itself, including the incomplete-image placeholder (this fork keeps replacing incomplete images with a placeholder rather than removing them) and any whitespace that precedes it.
