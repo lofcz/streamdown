@@ -1,6 +1,6 @@
 "use client";
 
-import { Streamdown, type ScrollableComponent } from "streamdown";
+import { type ScrollableComponent, Streamdown } from "streamdown";
 
 const longLine =
   "// This is an intentionally very long line of code so the block overflows horizontally and must scroll ".repeat(

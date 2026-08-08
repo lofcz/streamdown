@@ -323,90 +323,114 @@ const EMPTY_MASK = new Uint8Array(0);
 // read as outside), mirroring sequential toggle semantics. LaTeX \(...\) /
 // \[...\] delimiters are mutually exclusive with $ / $$ — inside one form the
 // other is literal.
+// Mutable math-delimiter state threaded through the scan
+interface MathState {
+  inBlockLatex: boolean;
+  inBlockMath: boolean;
+  inInlineLatex: boolean;
+  inInlineMath: boolean;
+}
+
+const inAnyMath = (s: MathState): boolean =>
+  s.inInlineMath || s.inBlockMath || s.inInlineLatex || s.inBlockLatex;
+
+// Handles a backslash at index i: returns how far to advance (2 if the
+// backslash consumed a delimiter, 1 if it is literal). Handles escaped \$ and
+// LaTeX \( \) \[ \] toggles. LaTeX delimiters only toggle their own form, and
+// only while not inside $ / $$ math.
+const consumeBackslash = (
+  text: string,
+  i: number,
+  s: MathState,
+  mask: Uint8Array
+): number => {
+  const next = text[i + 1];
+  const markNext = () => {
+    if (i + 1 < text.length) {
+      mask[i + 1] = 1;
+    }
+  };
+  if (next === "$") {
+    // Escaped dollar sign: literal, not a math delimiter
+    if (i + 1 < text.length) {
+      mask[i + 1] = mask[i];
+    }
+    return 2;
+  }
+  if (s.inInlineMath || s.inBlockMath) {
+    return 1;
+  }
+  if (next === "(" && !s.inInlineLatex && !s.inBlockLatex) {
+    s.inInlineLatex = true;
+    markNext();
+    return 2;
+  }
+  if (next === ")" && s.inInlineLatex) {
+    s.inInlineLatex = false;
+    markNext();
+    return 2;
+  }
+  if (next === "[" && !s.inInlineLatex && !s.inBlockLatex) {
+    s.inBlockLatex = true;
+    markNext();
+    return 2;
+  }
+  if (next === "]" && s.inBlockLatex) {
+    s.inBlockLatex = false;
+    markNext();
+    return 2;
+  }
+  return 1;
+};
+
+// Handles a $ at index i: returns how far to advance (2 for $$, else 1)
+const consumeDollar = (
+  text: string,
+  i: number,
+  s: MathState,
+  mask: Uint8Array
+): number => {
+  // $ delimiters are literal inside LaTeX math
+  if (s.inInlineLatex || s.inBlockLatex) {
+    return 1;
+  }
+  if (text[i + 1] === "$") {
+    s.inBlockMath = !s.inBlockMath;
+    s.inInlineMath = false;
+    mask[i + 1] = 1;
+    return 2;
+  }
+  if (!s.inBlockMath) {
+    s.inInlineMath = !s.inInlineMath;
+  }
+  return 1;
+};
+
 const buildMathMask = (scan: TextScan): Uint8Array => {
   const { text, regions } = scan;
   const n = text.length;
   const mask = new Uint8Array(n);
-  let inInlineMath = false;
-  let inBlockMath = false;
-  let inInlineLatex = false;
-  let inBlockLatex = false;
+  const s: MathState = {
+    inInlineMath: false,
+    inBlockMath: false,
+    inInlineLatex: false,
+    inBlockLatex: false,
+  };
 
   let i = 0;
   while (i < n) {
-    mask[i] =
-      inInlineMath || inBlockMath || inInlineLatex || inBlockLatex ? 1 : 0;
+    mask[i] = inAnyMath(s) ? 1 : 0;
     if (regions[i] !== REGION.PROSE) {
       i += 1;
       continue;
     }
     if (text[i] === "\\") {
-      const next = text[i + 1];
-      if (next === "$") {
-        // Escaped dollar sign: literal, not a math delimiter
-        if (i + 1 < n) {
-          mask[i + 1] = mask[i];
-        }
-        i += 2;
-        continue;
-      }
-      // LaTeX delimiters only toggle their own form, and only while not
-      // inside the other form or inside $ / $$ math
-      if (!(inInlineMath || inBlockMath)) {
-        if (next === "(" && !inInlineLatex && !inBlockLatex) {
-          inInlineLatex = true;
-          if (i + 1 < n) {
-            mask[i + 1] = 1;
-          }
-          i += 2;
-          continue;
-        }
-        if (next === ")" && inInlineLatex) {
-          inInlineLatex = false;
-          if (i + 1 < n) {
-            mask[i + 1] = 1;
-          }
-          i += 2;
-          continue;
-        }
-        if (next === "[" && !inInlineLatex && !inBlockLatex) {
-          inBlockLatex = true;
-          if (i + 1 < n) {
-            mask[i + 1] = 1;
-          }
-          i += 2;
-          continue;
-        }
-        if (next === "]" && inBlockLatex) {
-          inBlockLatex = false;
-          if (i + 1 < n) {
-            mask[i + 1] = 1;
-          }
-          i += 2;
-          continue;
-        }
-      }
-      i += 1;
+      i += consumeBackslash(text, i, s, mask);
       continue;
     }
-    if (text[i] !== "$") {
-      i += 1;
+    if (text[i] === "$") {
+      i += consumeDollar(text, i, s, mask);
       continue;
-    }
-    // $ delimiters are literal inside LaTeX math
-    if (inInlineLatex || inBlockLatex) {
-      i += 1;
-      continue;
-    }
-    if (text[i + 1] === "$") {
-      inBlockMath = !inBlockMath;
-      inInlineMath = false;
-      mask[i + 1] = 1;
-      i += 2;
-      continue;
-    }
-    if (!inBlockMath) {
-      inInlineMath = !inInlineMath;
     }
     i += 1;
   }

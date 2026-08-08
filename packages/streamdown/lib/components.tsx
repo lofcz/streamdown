@@ -762,8 +762,8 @@ const MemoCallout = memo<DivProps>(
           "my-4 rounded-md border-l-4 px-4 py-3 [&>p:last-child]:mb-0",
           className
         )}
-        style={style}
         data-streamdown="callout"
+        style={style}
         {...props}
       >
         {title !== undefined ? (

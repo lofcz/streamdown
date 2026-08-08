@@ -23,7 +23,7 @@ import type { Plugin } from "unified";
  *
  * Implementation note: `>>>` is not standard markdown. CommonMark lexes it
  * as three nested blockquotes whose content lazily continues plain text but
- * *breaks* at lists, blank lines, and inline-markdown splits — so a post-
+ * breaks at lists, blank lines, and inline-markdown splits — so a post-
  * parse AST collapse cannot reliably recover the whole container body.
  * Instead, {@link extractCallouts} scans the raw source **before** markdown
  * parsing (the Streamdown component runs it on the raw text before the
@@ -35,11 +35,11 @@ import type { Plugin } from "unified";
  */
 
 export interface CalloutData {
-  title?: string;
-  color?: string;
-  icon?: string;
   /** Raw markdown body (never includes the opener/closer lines). */
   body: string;
+  color?: string;
+  icon?: string;
+  title?: string;
 }
 
 const OPEN_PATTERN = /^>>>[ \t]?(.*)$/;
@@ -112,10 +112,10 @@ const encodeBody = (value: string): string => {
 };
 
 interface ParsedRegion {
-  /** Replacement markdown (placeholder `<div>` or nothing) for the region. */
-  replacement: string;
   /** Index of the first line after the region. */
   next: number;
+  /** Replacement markdown (placeholder `<div>` or nothing) for the region. */
+  replacement: string;
 }
 
 /**
@@ -205,4 +205,7 @@ export const extractCallouts = (source: string): string => {
  * applied); it is a no-op on the already-parsed tree because the placeholder
  * `<div class="sdm-callout">` parses as an ordinary HTML block.
  */
-export const remarkContainerAlerts: Plugin<[], Root> = () => () => {};
+export const remarkContainerAlerts: Plugin<[], Root> = () => () => {
+  // Intentionally a no-op: container alerts are preprocessed into HTML blocks
+  // before remark runs, so there is nothing left to transform here.
+};

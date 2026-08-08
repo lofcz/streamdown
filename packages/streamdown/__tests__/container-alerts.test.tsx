@@ -2,7 +2,6 @@ import { render } from "@testing-library/react";
 import type { CSSProperties } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
-import { Markdown } from "../lib/markdown";
 
 describe("remarkContainerAlerts", () => {
   it("renders a basic callout with title, body and color", () => {
@@ -62,7 +61,7 @@ describe("remarkContainerAlerts", () => {
     const content = ">>> (heart)[T]{red}\nbody\n<<<";
     const calloutIcon = vi.fn((name: string) => <svg data-icon={name} />);
     const { container } = render(
-      <Streamdown children={content} calloutIcon={calloutIcon} />
+      <Streamdown calloutIcon={calloutIcon} children={content} />
     );
     expect(calloutIcon).toHaveBeenCalledWith("heart");
     expect(container.querySelector('[data-icon="heart"]')).toBeTruthy();
@@ -72,7 +71,7 @@ describe("remarkContainerAlerts", () => {
     const content = ">>> {heart}[T]{red}\nbody\n<<<";
     const calloutIcon = vi.fn((name: string) => <svg data-icon={name} />);
     const { container } = render(
-      <Streamdown children={content} calloutIcon={calloutIcon} />
+      <Streamdown calloutIcon={calloutIcon} children={content} />
     );
     expect(calloutIcon).toHaveBeenCalledWith("heart");
     const callout = container.querySelector(".sdm-callout");
@@ -83,7 +82,7 @@ describe("remarkContainerAlerts", () => {
   it("renders no icon when the resolver returns null", () => {
     const content = ">>> (heart)[T]\nbody\n<<<";
     const { container } = render(
-      <Streamdown children={content} calloutIcon={() => null} />
+      <Streamdown calloutIcon={() => null} children={content} />
     );
     expect(container.querySelector(".sdm-callout svg")).toBeFalsy();
     expect(container.querySelector(".sdm-callout")).toBeTruthy();
@@ -107,7 +106,7 @@ describe("remarkContainerAlerts", () => {
       borderLeftColor: `color-mix(in oklch, ${color} 70%, black)`,
     });
     const { container } = render(
-      <Streamdown children={content} calloutStyle={calloutStyle} />
+      <Streamdown calloutStyle={calloutStyle} children={content} />
     );
     const callout = container.querySelector(
       ".sdm-callout"
@@ -167,10 +166,12 @@ describe("remarkContainerAlerts", () => {
     // goes through remend + the incomplete-markdown path — the real
     // real-time streaming pipeline.
     const renderStreaming = (content: string) =>
-      render(<Streamdown children={content} mode="streaming" isAnimating />);
+      render(<Streamdown children={content} isAnimating mode="streaming" />);
 
     it("opens the callout immediately on a valid opener, streaming body", () => {
-      const { container } = renderStreaming(">>> [My Section]{red}\npartial body");
+      const { container } = renderStreaming(
+        ">>> [My Section]{red}\npartial body"
+      );
       const callout = container.querySelector(".sdm-callout");
       expect(callout).toBeTruthy();
       expect(callout?.getAttribute("data-callout-title")).toBe("My Section");
@@ -221,15 +222,15 @@ describe("remarkContainerAlerts", () => {
 
     it("keeps the callout open across an append-only streaming update", () => {
       const { container, rerender } = renderStreaming(">>> [T]{red}\nfirst");
-      expect(
-        container.querySelector(".sdm-callout")?.textContent
-      ).toContain("first");
+      expect(container.querySelector(".sdm-callout")?.textContent).toContain(
+        "first"
+      );
 
       rerender(
         <Streamdown
           children={">>> [T]{red}\nfirst\n\nsecond **paragraph**"}
-          mode="streaming"
           isAnimating
+          mode="streaming"
         />
       );
       const callout = container.querySelector(".sdm-callout");

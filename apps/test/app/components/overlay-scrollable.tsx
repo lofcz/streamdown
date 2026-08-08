@@ -9,12 +9,20 @@ import "overlayscrollbars/overlayscrollbars.css";
  * Passed as the `scrollable` prop so code-block bodies and table scroll
  * regions render with overlay scrollbars instead of native ones.
  */
-export const OverlayScrollable = ({ scrollRef, children, ...props }: ScrollableProps) => (
+export const OverlayScrollable = ({
+  scrollRef,
+  children,
+  ...props
+}: ScrollableProps) => (
   <OverlayScrollbarsComponent
     defer
     options={{
       overflow: { x: "scroll", y: "scroll" },
-      scrollbars: { autoHide: "move", autoHideDelay: 400, theme: "os-theme-dark" },
+      scrollbars: {
+        autoHide: "move",
+        autoHideDelay: 400,
+        theme: "os-theme-dark",
+      },
     }}
     {...props}
   >

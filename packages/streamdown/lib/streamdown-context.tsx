@@ -2,8 +2,8 @@
 
 import {
   type ComponentProps,
-  type CSSProperties,
   type ComponentType,
+  type CSSProperties,
   createContext,
 } from "react";
 import type { PluggableList } from "unified";
@@ -113,6 +113,8 @@ export interface StreamdownContextType {
   calloutStyle?: CalloutStyleResolver;
   /** Max height for code blocks (px number or CSS length). `0` / `Infinity` disables. @default 400 */
   codeBlockMaxHeight?: number | string;
+  /** Merged components/plugins so custom renderers (e.g. callout body) can re-parse nested markdown identically to the outer pass. */
+  components?: Components;
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -122,15 +124,13 @@ export interface StreamdownContextType {
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  rehypePlugins?: PluggableList;
+  remarkPlugins?: PluggableList;
   /** Component used for horizontal-scroll regions (code body, table). @default plain div */
   scrollable?: ScrollableComponent;
   shikiTheme: [ThemeInput, ThemeInput];
   /** Max height for tables (px number or CSS length). `0` / `Infinity` disables. @default 300 */
   tableMaxHeight?: number | string;
-  /** Merged components/plugins so custom renderers (e.g. callout body) can re-parse nested markdown identically to the outer pass. */
-  components?: Components;
-  remarkPlugins?: PluggableList;
-  rehypePlugins?: PluggableList;
 }
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [

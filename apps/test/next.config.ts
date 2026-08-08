@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   // Multiple lockfiles in the home dir confuse Turbopack's root inference;
   // pin it to the streamdown monorepo so it serves THIS app and its routes.
   turbopack: {
-    root: path.join(__dirname, "../.."),
+    root: path.join(import.meta.dirname, "../.."),
   },
 };
 
