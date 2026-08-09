@@ -1,5 +1,5 @@
 ---
-"remend": minor
+"@lofcz/remend": minor
 ---
 
 Rework code-region detection and double-underscore counting.
