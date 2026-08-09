@@ -30,7 +30,7 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
   "before:text-muted-foreground/50",
   "before:text-right",
   "before:w-6",
-  "bg-[var(--sdm-bg,inherit]",
+  "bg-[var(--sdm-bg,inherit)]",
   "bg-[var(--sdm-tbg)]",
   "bg-background",
   "bg-background/50",
@@ -62,7 +62,7 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
   "bottom-4",
   "break-all",
   "cursor-pointer",
-  "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit)]",
+  "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit))]",
   "dark:bg-[var(--shiki-dark-bg,var(--sdm-tbg))]",
   "dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]",
   "disabled:cursor-not-allowed",
@@ -200,23 +200,49 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
 ] as const;
 
 /**
- * Generates a Tailwind v4 `@source inline()` directive containing all
+ * Generates Tailwind v4 `@source inline()` directive(s) containing all
  * streamdown classes, optionally prefixed.
+ *
+ * Classes that contain commas (e.g. `text-[var(--sdm-c,inherit)]`) cannot live
+ * inside a brace group — `@source inline("{a,b}")` brace-expands on commas and
+ * would split them. Those are emitted as their own `@source inline("…")` lines.
  *
  * @param prefix - Tailwind v4 prefix string (e.g. `"tw"` for `prefix(tw)`).
  *                 Omit or pass `undefined` when you are not using a prefix.
- * @returns       A ready-to-paste CSS `@source inline(...)` rule string.
+ * @returns       Ready-to-paste CSS `@source inline(...)` rule string(s).
  *
  * @example
  * // In a postcss.config.js build script, write this string to a CSS file:
  * import { getSourceInline } from 'streamdown/tailwind';
  * console.log(getSourceInline('tw'));
  * // → @source inline("tw:{absolute,animate-spin,...}");
+ * //   @source inline("tw:text-[var(--sdm-c,inherit)]");
+ * //   …
  */
 export function getSourceInline(prefix?: string): string {
   const names = [...STREAMDOWN_CLASSES];
-  const body = prefix
-    ? `${prefix}:{${names.join(",")}}`
-    : `{${names.join(",")}}`;
-  return `@source inline("${body}");`;
+  const applyPrefix = (name: string) => (prefix ? `${prefix}:${name}` : name);
+
+  // Brace groups split on commas, so comma-containing utilities must be alone.
+  const simple: string[] = [];
+  const withComma: string[] = [];
+  for (const name of names) {
+    if (name.includes(",")) {
+      withComma.push(name);
+    } else {
+      simple.push(name);
+    }
+  }
+
+  const lines: string[] = [];
+  if (simple.length > 0) {
+    const body = prefix
+      ? `${prefix}:{${simple.join(",")}}`
+      : `{${simple.join(",")}}`;
+    lines.push(`@source inline("${body}");`);
+  }
+  for (const name of withComma) {
+    lines.push(`@source inline("${applyPrefix(name)}");`);
+  }
+  return lines.join("\n");
 }

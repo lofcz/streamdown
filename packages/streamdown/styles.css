@@ -136,3 +136,26 @@
   )::after {
   content: none;
 }
+
+/*
+ * Shiki dual-theme tokens stash colors in --sdm-c / --shiki-dark (inline `color`
+ * would override the dark-mode class switch). The matching Tailwind utilities
+ * contain commas (`text-[var(--sdm-c,inherit)]`), and `@source inline("{a,b}")`
+ * brace-expands on those commas — so the utilities never get generated.
+ * Apply the custom properties here instead.
+ */
+[data-streamdown="code-block"] [style*="--sdm-c"] {
+  color: var(--sdm-c, inherit);
+}
+
+:is(.dark, [data-theme="dark"]) [data-streamdown="code-block"] [style*="--sdm-c"] {
+  color: var(--shiki-dark, var(--sdm-c, inherit));
+}
+
+[data-streamdown="code-block"] [style*="--sdm-tbg"] {
+  background-color: var(--sdm-tbg);
+}
+
+:is(.dark, [data-theme="dark"]) [data-streamdown="code-block"] [style*="--sdm-tbg"] {
+  background-color: var(--shiki-dark-bg, var(--sdm-tbg));
+}
