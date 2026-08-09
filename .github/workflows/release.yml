@@ -60,7 +60,7 @@ jobs:
       # `release:publish` marks those as private in this checkout first (not committed).
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@v2
+        uses: changesets/action@v1
         with:
           version: pnpm changeset version
           publish: pnpm release:publish
