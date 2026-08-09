@@ -44,7 +44,7 @@
   "description": "CJK text handling plugin for Streamdown",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lofcz/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown-ng.git",
     "directory": "packages/streamdown-cjk"
   },
   "publishConfig": {

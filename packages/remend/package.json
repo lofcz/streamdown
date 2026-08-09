@@ -18,7 +18,7 @@
   "homepage": "https://streamdown.ai/docs/termination",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lofcz/streamdown.git",
+    "url": "git+https://github.com/lofcz/streamdown-ng.git",
     "directory": "packages/remend"
   },
   "publishConfig": {
