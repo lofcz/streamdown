@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.9.3
+
+### Patch Changes
+
+- d88bc69: Fix Shiki code-block token colors when Tailwind `@source inline` drops comma-containing utilities
+
 ## 2.9.2
 
 ### Patch Changes
