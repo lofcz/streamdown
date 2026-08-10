@@ -66,11 +66,6 @@ import {
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
-export type {
-  BundledLanguage,
-  BundledTheme,
-  ThemeRegistrationAny,
-} from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimateCursor, createAnimatePlugin } from "./lib/animate";
@@ -96,6 +91,8 @@ export {
   parseMarkdownIntoBlocksIncremental,
 } from "./lib/parse-blocks";
 export type {
+  BundledLanguage,
+  BundledTheme,
   CjkPlugin,
   CodeHighlighterPlugin,
   CustomRenderer,
@@ -105,6 +102,7 @@ export type {
   MathPlugin,
   PluginConfig,
   ThemeInput,
+  ThemeRegistrationAny,
 } from "./lib/plugin-types";
 export { DefaultScrollable } from "./lib/scrollable";
 export type {
