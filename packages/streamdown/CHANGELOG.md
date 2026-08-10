@@ -1,5 +1,13 @@
 # streamdown
 
+## 2.9.4
+
+### Patch Changes
+
+- ee72640: Fix type declarations requiring a `shiki` install.
+
+  `BundledLanguage`, `BundledTheme`, and `ThemeRegistrationAny` are now defined locally and re-exported from `streamdown`, so consumers can type-check without installing `shiki`. Runtime highlighting remains in `@streamdown/code`, which still depends on `shiki`. Method syntax on `CodeHighlighterPlugin` keeps narrower Shiki plugin types assignable.
+
 ## 2.9.3
 
 ### Patch Changes
