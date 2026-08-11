@@ -6,7 +6,7 @@ import type { ExtraProps } from "../lib/markdown";
 type CustomComponentProps = Record<string, unknown> & ExtraProps;
 
 const SUGGESTIONS_MD =
-  "Here are some directions.\n\n<suggestions>\n<suggestion>Summarize this article</suggestion>\n<suggestion message=\"Draft the outline\">Draft outline</suggestion>\n</suggestions>";
+  'Here are some directions.\n\n<suggestions>\n<suggestion>Summarize this article</suggestion>\n<suggestion message="Draft the outline">Draft outline</suggestion>\n</suggestions>';
 
 describe("dataOnlyTags — structured payload tags", () => {
   it("lifts parsed children into data-content and renders no raw markup", () => {
@@ -19,8 +19,8 @@ describe("dataOnlyTags — structured payload tags", () => {
     const { container } = render(
       <Streamdown
         allowedTags={{ suggestions: [], suggestion: ["message"] }}
-        dataOnlyTags={["suggestions"]}
         components={{ suggestions: Suggestions }}
+        dataOnlyTags={["suggestions"]}
         mode="static"
       >
         {SUGGESTIONS_MD}
@@ -42,7 +42,7 @@ describe("dataOnlyTags — structured payload tags", () => {
     ]);
   });
 
-  it("emits data-content=\"[]\" for an empty wrapper", () => {
+  it('emits data-content="[]" for an empty wrapper', () => {
     let received: unknown;
     const Suggestions = (props: CustomComponentProps) => {
       received = props["data-content"];
@@ -52,8 +52,8 @@ describe("dataOnlyTags — structured payload tags", () => {
     render(
       <Streamdown
         allowedTags={{ suggestions: [] }}
-        dataOnlyTags={["suggestions"]}
         components={{ suggestions: Suggestions }}
+        dataOnlyTags={["suggestions"]}
         mode="static"
       >
         {"<suggestions></suggestions>"}
