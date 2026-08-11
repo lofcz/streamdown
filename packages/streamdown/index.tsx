@@ -40,6 +40,7 @@ import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeDataOnlyTags } from "./lib/rehype/data-only-tags";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
@@ -216,6 +217,28 @@ export type StreamdownProps = Options & {
    * ```
    */
   literalTagContent?: string[];
+  /**
+   * Tags whose parsed children are lifted into a JSON `data-content`
+   * attribute and removed from the tree — the element renders with NO visible
+   * output of its own. For custom tags that carry structured PAYLOAD rather
+   * than prose (e.g. `<suggestions>` with a list of options): map the tag in
+   * `components`, read `props["data-content"]`, and render arbitrary UI from
+   * the data. Requires the tag to also be listed in `allowedTags` (so both the
+   * wrapper and its child tags survive sanitization). Do not combine with
+   * `literalTagContent` for the same tag.
+   *
+   * @example
+   * ```tsx
+   * <Streamdown
+   *   allowedTags={{ suggestions: [], suggestion: ["message"] }}
+   *   dataOnlyTags={["suggestions"]}
+   *   components={{ suggestions: SuggestionsList }}
+   * >
+   *   {`<suggestions>\n<suggestion message="Summarize it">Summarize</suggestion>\n</suggestions>`}
+   * </Streamdown>
+   * ```
+   */
+  dataOnlyTags?: string[];
   /** Override UI strings for i18n / custom labels */
   translations?: Partial<StreamdownTranslations>;
   /** Custom icons to override the default icons used in controls */
@@ -519,6 +542,7 @@ export const Streamdown = memo(
     lineNumbers = true,
     allowedTags,
     literalTagContent,
+    dataOnlyTags,
     translations,
     icons: iconOverrides,
     prefix,
@@ -857,6 +881,10 @@ export const Streamdown = memo(
         result = [...result, [rehypeLiteralTagContent, literalTagContent]];
       }
 
+      if (dataOnlyTags && dataOnlyTags.length > 0) {
+        result = [...result, [rehypeDataOnlyTags, dataOnlyTags]];
+      }
+
       if (plugins?.math) {
         result = [...result, plugins.math.rehypePlugin];
       }
@@ -868,6 +896,7 @@ export const Streamdown = memo(
       allowedTags,
       allowedTagNames,
       literalTagContent,
+      dataOnlyTags,
     ]);
 
     // Combined context value - single object reduces React tree overhead
@@ -1072,6 +1101,7 @@ export const Streamdown = memo(
     prevProps.calloutStyle === nextProps.calloutStyle &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
+    prevProps.dataOnlyTags === nextProps.dataOnlyTags &&
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&

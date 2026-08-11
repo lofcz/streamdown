@@ -1,6 +1,10 @@
 # streamdown
 
-## 2.9.4
+## 2.10.0
+
+### Minor Changes
+
+- Add declarative `dataOnlyTags` prop: custom tags whose parsed children are lifted into a JSON `data-content` attribute and removed from the rendered tree. This enables payload-style custom tags (e.g. a `<suggestions>` list in AI chat output) where the mapped `components` entry renders arbitrary UI from structured data instead of the raw markup. Pairs with the existing `allowedTags` / `literalTagContent` seams.
 
 ### Patch Changes
 

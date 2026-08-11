@@ -1,6 +1,6 @@
 {
   "name": "@lofcz/streamdown",
-  "version": "2.9.4",
+  "version": "2.10.0",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -72,6 +72,7 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "hast-util-to-jsx-runtime": "^2.3.6",
+    "hast-util-to-text": "^4.0.2",
     "html-url-attributes": "^3.0.1",
     "marked": "^18.0.9",
     "rehype-harden": "^1.1.8",
