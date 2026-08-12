@@ -522,7 +522,7 @@ export const Streamdown = memo(
     rehypePlugins = defaultRehypePluginsArray,
     remarkPlugins = defaultRemarkPluginsArray,
     className,
-    shikiTheme = defaultShikiTheme,
+    shikiTheme,
     mermaid,
     codeBlockMaxHeight = 400,
     controls = true,
@@ -905,7 +905,8 @@ export const Streamdown = memo(
         calloutIcon,
         calloutStyle,
         codeBlockMaxHeight,
-        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
+        shikiTheme:
+          shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
         isAnimating,
         lineNumbers,
