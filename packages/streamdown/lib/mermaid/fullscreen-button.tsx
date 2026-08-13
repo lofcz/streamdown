@@ -101,8 +101,9 @@ export const MermaidFullscreenButton = ({
         title={t.viewFullscreen}
         type="button"
         {...props}
+        aria-label={t.viewFullscreen}
       >
-        <Maximize2Icon aria-hidden={true} size={14} />
+        <Maximize2Icon aria-hidden="true" size={14} />
       </button>
 
       {isFullscreen
@@ -136,6 +137,7 @@ export const MermaidFullscreenButton = ({
                   <MermaidDownloadDropdown chart={chart} config={config} />
                 ) : null}
                 <button
+                  aria-label={t.exitFullscreen}
                   className={cn(
                     "rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                   )}
@@ -143,7 +145,7 @@ export const MermaidFullscreenButton = ({
                   title={t.exitFullscreen}
                   type="button"
                 >
-                  <XIcon aria-hidden={true} size={20} />
+                  <XIcon aria-hidden="true" size={20} />
                 </button>
               </div>
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
