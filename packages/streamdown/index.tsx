@@ -980,11 +980,11 @@ export const Streamdown = memo(
       if (animateTimelineRef.current && isAnimating) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
-          const { maxBacklogMs: _budget, ...pluginOpts } =
+          const rawOpts =
             animatedKey && animatedKey !== "true"
               ? (animated as AnimateOptions)
               : ({} as AnimateOptions);
-          void _budget;
+          const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
           blockAnimatePluginsRef.current[index] = createAnimatePlugin({
             ...pluginOpts,
             timeline: animateTimelineRef.current,
