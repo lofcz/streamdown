@@ -8,6 +8,7 @@ import {
   useDeferredValue,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -18,11 +19,11 @@ import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
 import {
-  type AnimateCursor,
   type AnimateOptions,
   type AnimatePlugin,
-  createAnimateCursor,
+  type AnimateTimeline,
   createAnimatePlugin,
+  createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
@@ -425,22 +426,22 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // Tell the animate plugin how many HAST characters were already rendered
-    // so it can skip their animation (duration=0ms) on this render pass.
+    // After rehype paints, commit the new char count so the *next* render
+    // treats already-visible text as settled. Commit lives outside the render
+    // body so StrictMode double-invoke cannot wipe and re-seed prevContentLength
+    // (#570 secondary). The plugin seeds prevContentLength from its own
+    // committedCharCount at the start of every rehype run.
     //
-    // getLastRenderCharCount() returns the char count from the PREVIOUS
-    // rehype run then resets to 0. React renders depth-first: this Block's
-    // body runs, then its child Markdown calls processor.runSync (which
-    // runs rehypeAnimate synchronously). So the value here is from the
-    // previous render — exactly what we need as prevContentLength.
-    if (animatePluginProp) {
-      const prevCount = animatePluginProp.getLastRenderCharCount();
-      animatePluginProp.setPrevContentLength(prevCount);
-      // When the block has an incomplete code fence, animate code block
-      // content incrementally instead of skipping it. This gives visual
-      // feedback that code is streaming in token-by-token.
-      animatePluginProp.setAnimateCodeBlocks(isIncomplete);
-    }
+    // Span teardown on settle (#570 primary) is handled by stamping
+    // data-sd-animated on ancestors in the plugin and comparing that prop in
+    // sameClassAndNode — no Markdown remount key needed.
+    useLayoutEffect(() => {
+      animatePluginProp?.commit();
+    });
+    // When the block has an incomplete code fence, animate code block
+    // content incrementally instead of skipping it. This gives visual
+    // feedback that code is streaming in token-by-token.
+    animatePluginProp?.setAnimateCodeBlocks(isIncomplete);
 
     // Note: remend is applied to the trailing block only (in Streamdown), so we
     // don't need to apply it again here
@@ -511,6 +512,12 @@ export const Block = memo(
 
     // Check if remarkPlugins changed (reference comparison)
     if (prevProps.remarkPlugins !== nextProps.remarkPlugins) {
+      return false;
+    }
+
+    // Animate plugin presence toggles with isAnimating — must re-render so
+    // settled blocks drop their data-sd-animate spans (#570).
+    if (!!prevProps.animatePlugin !== !!nextProps.animatePlugin) {
       return false;
     }
 
@@ -692,59 +699,51 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
-    // Shared cursor resets to 0 at the start of every render pass and is
-    // incremented by each block's rehype plugin as it runs, so sibling
-    // blocks automatically chain their stagger delays in render order.
-    const animateCursorRef = useRef<AnimateCursor | null>(null);
-    // Stable array of per-block animate plugins — one plugin per block so
-    // each block independently tracks its own prevContentLength while the
-    // shared cursor serialises the stagger delays across all blocks.
+    // Shared wall-clock timeline: serializes stagger delays across sibling
+    // blocks AND across streaming ticks (memoized earlier blocks don't
+    // re-render, so a pure render-order counter would miss them). Fixes #482.
+    const animateTimelineRef = useRef<AnimateTimeline | null>(null);
+    // One AnimatePlugin per block so each tracks its own prevContentLength.
     const blockAnimatePluginsRef = useRef<AnimatePlugin[]>([]);
-    // Stable arrays of per-block merged rehype plugins (base + per-block animate).
-    // Keyed by block index; rebuilt only when mergedRehypePlugins changes.
+    // Per-block rehype plugin arrays (base + that block's animate plugin).
+    // Stable references keep Block's memo from thrashing.
     const blockRehypePluginsRef = useRef<Pluggable[][]>([]);
     const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
-
-    // Keep track of the resolved options key so we can recreate plugins
-    // when the animation options change.
     const prevAnimatedKeyRef = useRef<string>("");
 
-    // Derive the per-block animate plugin for a given index.  Creates a
-    // new plugin lazily when needed; recreates all plugins when the options
-    // key changes.
     if (animatedKey) {
-      // (Re)create cursor when options change.
       if (prevAnimatedKeyRef.current !== animatedKey) {
         prevAnimatedKeyRef.current = animatedKey;
-        animateCursorRef.current = createAnimateCursor();
+        const backlog =
+          animatedKey !== "true"
+            ? (animated as AnimateOptions).maxBacklogMs
+            : undefined;
+        animateTimelineRef.current = createAnimateTimeline({
+          maxBacklogMs: backlog,
+        });
         blockAnimatePluginsRef.current = [];
         blockRehypePluginsRef.current = [];
+      } else if (!animateTimelineRef.current) {
+        animateTimelineRef.current = createAnimateTimeline();
       }
-      // Reset cursor to 0 at the start of this render pass.
-      if (animateCursorRef.current) {
-        animateCursorRef.current.current = 0;
+      if (isAnimating && animateTimelineRef.current) {
+        animateTimelineRef.current.beginPass(animateTimelineRef.current.now());
       }
     } else {
-      // Animation disabled — clear any cached plugins and cursor.
-      animateCursorRef.current = null;
+      animateTimelineRef.current = null;
       blockAnimatePluginsRef.current = [];
       blockRehypePluginsRef.current = [];
+      prevAnimatedKeyRef.current = "";
     }
 
-    // Provide a stable single-plugin reference for external consumers that
-    // still use the animatePlugin prop (e.g. custom BlockComponent).
-    // Internal rendering uses blockAnimatePluginsRef directly.
-    const _animatePlugin = animateCursorRef.current
-      ? (blockAnimatePluginsRef.current[0] ??
-        (() => {
-          const p = createAnimatePlugin({
-            ...(animatedKey !== "true" ? (animated as AnimateOptions) : {}),
-            cursor: animateCursorRef.current ?? undefined,
-          });
-          blockAnimatePluginsRef.current[0] = p;
-          return p;
-        })())
-      : null;
+    // Commit the in-flight pass horizon after paint. Discarded concurrent
+    // renders that called beginPass never reach this effect, so they can't
+    // poison nextStartAt.
+    useLayoutEffect(() => {
+      if (isAnimating) {
+        animateTimelineRef.current?.commitPass();
+      }
+    });
 
     // Defer the blocks reference during streaming so React can drop intermediate
     // values under load. Replaces the previous useState+useEffect+startTransition
@@ -758,7 +757,7 @@ export const Streamdown = memo(
     // visually lag the open trailing block. When the settled prefix is unchanged
     // between deferred and fresh arrays, render the latest tip immediately.
     const blocksToRender = useMemo(() => {
-      if (mode !== "streaming" || animateCursorRef.current) {
+      if (mode !== "streaming" || animateTimelineRef.current) {
         return blocks;
       }
       if (deferredBlocks === blocks || deferredBlocks.length === 0) {
@@ -897,6 +896,8 @@ export const Streamdown = memo(
       if (plugins?.math) {
         result = [...result, plugins.math.rehypePlugin];
       }
+      // Animate plugins are attached per-block in getBlockPlugins() so each
+      // block owns its prevContentLength while sharing one timeline.
 
       if (dir === "auto" && mode === "static") {
         result = [...result, rehypeBlockDirection];
@@ -976,11 +977,17 @@ export const Streamdown = memo(
       blockRehypePlugins: Pluggable[];
     } => {
       let blockAnimatePlugin: AnimatePlugin | null = null;
-      if (animateCursorRef.current && isAnimating) {
+      if (animateTimelineRef.current && isAnimating) {
         if (!blockAnimatePluginsRef.current[index]) {
+          // maxBacklogMs is consumed by the timeline factory, not the plugin.
+          const { maxBacklogMs: _budget, ...pluginOpts } =
+            animatedKey && animatedKey !== "true"
+              ? (animated as AnimateOptions)
+              : ({} as AnimateOptions);
+          void _budget;
           blockAnimatePluginsRef.current[index] = createAnimatePlugin({
-            ...(animatedKey !== "true" ? (animated as AnimateOptions) : {}),
-            cursor: animateCursorRef.current,
+            ...pluginOpts,
+            timeline: animateTimelineRef.current,
           });
         }
         blockAnimatePlugin = blockAnimatePluginsRef.current[index];

@@ -4,20 +4,21 @@ import { unified } from "unified";
 import { describe, expect, it } from "vitest";
 import {
   animate,
-  createAnimateCursor,
   createAnimatePlugin,
+  createAnimateTimeline,
+  MAX_ANIMATION_BACKLOG_MS,
 } from "../lib/animate";
 
 const SPAN_GAP_RE = /<\/span>\s+<span/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
+const DELAY_RE = /--sd-delay:(\d+)ms/g;
 const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
 const IMG_TAG_RE = /<img[^>]*>/;
 const HR_TAG_RE = /<hr[^>]*>/;
-const LINK_PATTERN_RE =
-  /<a href="\/">\s*<span[^>]*>Hello <\/span><span[^>]*>world<\/span><\/a>/;
-const LINK_PATTERN_LEADING_SPACE_RE =
-  /<a href="\/"> <span[^>]*>Hello <\/span><span[^>]*>world<\/span><\/a>/;
+
+const delaysOf = (html: string): number[] =>
+  Array.from(html.matchAll(DELAY_RE), (match) => Number.parseInt(match[1], 10));
 
 const processHtml = async (html: string, plugin = animate) => {
   const processor = unified()
@@ -71,15 +72,17 @@ describe("animate plugin", () => {
     it("should wrap each word in a span", async () => {
       const result = await processHtml("<p>Hello world foo</p>");
       expect(result).toContain("data-sd-animate");
-      expect(result).toContain(">Hello<");
-      expect(result).toContain(">world<");
+      // Trailing whitespace is glued into the word span (#535).
+      expect(result).toContain(">Hello <");
+      expect(result).toContain(">world <");
       expect(result).toContain(">foo<");
     });
 
-    it("should preserve whitespace as text nodes", async () => {
+    it("should glue trailing whitespace into the preceding word span", async () => {
       const result = await processHtml("<p>Hello world</p>");
-      // Whitespace should not be wrapped in a span
-      expect(result).toMatch(SPAN_GAP_RE);
+      // No bare whitespace between animate spans — space lives inside "Hello "
+      expect(result).not.toMatch(SPAN_GAP_RE);
+      expect(result).toContain(">Hello <");
     });
 
     it("should handle single word", async () => {
@@ -99,7 +102,8 @@ describe("animate plugin", () => {
       const plugin = createAnimatePlugin({ sep: "char" });
       const result = await processHtml("<p>Hi there</p>", plugin);
       expect(result).toContain(">H<");
-      expect(result).toContain(">i<");
+      // Space after "i" is glued onto that char span (#535).
+      expect(result).toContain(">i <");
       expect(result).toContain(">t<");
     });
   });
@@ -164,7 +168,7 @@ describe("animate plugin", () => {
       );
       expect(result).toContain("data-sd-animate");
       // All text nodes outside skip tags should be animated
-      expect(result).toContain(">Hello<");
+      expect(result).toContain(">Hello <");
       expect(result).toContain(">bold<");
       expect(result).toContain(">text<");
     });
@@ -174,7 +178,7 @@ describe("animate plugin", () => {
         "<ul><li>First item</li><li>Second item</li></ul>"
       );
       expect(result).toContain("data-sd-animate");
-      expect(result).toContain(">First<");
+      expect(result).toContain(">First <");
       expect(result).toContain(">item<");
     });
 
@@ -222,14 +226,22 @@ describe("animate plugin", () => {
       expect(secondCount).toBeGreaterThan(firstCount);
     });
 
+    it("getLastRenderCharCount is non-destructive (StrictMode-safe)", async () => {
+      const plugin = createAnimatePlugin();
+      await processHtml("<p>Hello</p>", plugin);
+      const a = plugin.getLastRenderCharCount();
+      const b = plugin.getLastRenderCharCount();
+      expect(a).toBe(5);
+      expect(b).toBe(5);
+    });
+
     it("setPrevContentLength with getLastRenderCharCount should skip already-rendered chars", async () => {
       const plugin = createAnimatePlugin();
       // First render: "Hello"
       await processHtml("<p>Hello</p>", plugin);
-      const prevCount = plugin.getLastRenderCharCount();
+      plugin.commit();
 
-      // Second render: "Hello world" — set prev length from HAST count
-      plugin.setPrevContentLength(prevCount);
+      // Second render: "Hello world" — committed count drives the skip window
       const result = await processHtml("<p>Hello world</p>", plugin);
 
       // "Hello" (chars 0-4) should have duration:0ms — already visible
@@ -267,9 +279,8 @@ describe("animate plugin", () => {
     it("should not apply delay to skipped (already-rendered) words", async () => {
       const plugin = createAnimatePlugin({ stagger: 50 });
       await processHtml("<p>Hello</p>", plugin);
-      const prevCount = plugin.getLastRenderCharCount();
+      plugin.commit();
 
-      plugin.setPrevContentLength(prevCount);
       const result = await processHtml("<p>Hello world foo</p>", plugin);
 
       // "Hello" is skipped (duration:0ms, no delay)
@@ -294,6 +305,250 @@ describe("animate plugin", () => {
     });
   });
 
+  describe("trailing whitespace glued into word spans (#535)", () => {
+    it("keeps the space after a word inside the same animate span", async () => {
+      const result = await processHtml("<p>Hello world</p>");
+      // "Hello " (with trailing space) is one span, then "world"
+      expect(result).toMatch(/>Hello <\/span>/);
+      expect(result).toMatch(/>world<\/span>/);
+      // No bare whitespace text node between the two spans
+      expect(result).not.toMatch(/<\/span> <span/);
+    });
+
+    it("glues spaces in char mode onto the preceding character", async () => {
+      const plugin = createAnimatePlugin({ sep: "char", stagger: 20 });
+      const result = await processHtml("<p>Hi there</p>", plugin);
+      expect(result).toMatch(/>i <\/span>/);
+      expect(result).not.toMatch(/<\/span> <span[^>]*>t</);
+    });
+  });
+
+  describe("shared timeline (cross-block / cross-tick chaining) (#482)", () => {
+    it("chains delays across sibling blocks in one pass", async () => {
+      const timeline = createAnimateTimeline({ now: () => 1000 });
+      const block0 = createAnimatePlugin({ stagger: 50, timeline });
+      const block1 = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(1000);
+      const result0 = await processHtml("<p>Hello world</p>", block0);
+      const result1 = await processHtml("<p>foo bar</p>", block1);
+      timeline.commitPass();
+
+      // block0: Hello=0 (omitted), world=50
+      expect(delaysOf(result0)).toEqual([50]);
+      // block1: foo=100, bar=150
+      expect(delaysOf(result1)).toEqual([100, 150]);
+    });
+
+    it("pushes a later block past a still-running cascade (memoized prior block)", async () => {
+      let now = 0;
+      const timeline = createAnimateTimeline({ now: () => now });
+      const list = createAnimatePlugin({ stagger: 50, timeline });
+      const heading = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      await processHtml("<ul><li>one two three four five</li></ul>", list);
+      timeline.commitPass();
+
+      now = 80;
+      timeline.beginPass(now);
+      const result = await processHtml("<h2>Done</h2>", heading);
+      timeline.commitPass();
+
+      // delay = max(0, 250-80) = 170
+      expect(delaysOf(result)).toEqual([170]);
+    });
+
+    it("does not add delay once the cascade has drained", async () => {
+      let now = 0;
+      const timeline = createAnimateTimeline({ now: () => now });
+      const block0 = createAnimatePlugin({ stagger: 50, timeline });
+      const block1 = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      await processHtml("<p>Hello world</p>", block0);
+      timeline.commitPass();
+
+      now = 500;
+      timeline.beginPass(now);
+      const result = await processHtml("<p>later</p>", block1);
+      timeline.commitPass();
+      expect(delaysOf(result)).toEqual([]);
+    });
+
+    it("only advances the timeline for newly animated words", async () => {
+      let now = 0;
+      const timeline = createAnimateTimeline({ now: () => now });
+      const plugin = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      await processHtml("<p>Hello world</p>", plugin);
+      timeline.commitPass();
+      plugin.commit();
+
+      now = 30;
+      timeline.beginPass(now);
+      const result = await processHtml("<p>Hello world foo</p>", plugin);
+      timeline.commitPass();
+
+      expect(delaysOf(result)).toEqual([70]);
+    });
+
+    it("per-plugin mark/rewind makes StrictMode double-rehype idempotent", async () => {
+      const timeline = createAnimateTimeline({ now: () => 0 });
+      const plugin = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      const a = await processHtml("<p>one two three</p>", plugin);
+      // StrictMode: rehype re-enters without a second beginPass
+      const b = await processHtml("<p>one two three</p>", plugin);
+      timeline.commitPass();
+      plugin.commit();
+
+      expect(delaysOf(a)).toEqual(delaysOf(b));
+      expect(delaysOf(b)).toEqual([50, 100]);
+    });
+
+    it("StrictMode multi-block stays ordered without double-counting", async () => {
+      const timeline = createAnimateTimeline({ now: () => 0 });
+      const a = createAnimatePlugin({ stagger: 50, timeline });
+      const b = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      await processHtml("<p>one two</p>", a);
+      await processHtml("<p>one two</p>", a);
+      const b1 = await processHtml("<p>three four</p>", b);
+      const b2 = await processHtml("<p>three four</p>", b);
+      timeline.commitPass();
+
+      expect(delaysOf(b1)).toEqual([100, 150]);
+      expect(delaysOf(b2)).toEqual(delaysOf(b1));
+    });
+
+    it("compresses stagger under load and keeps siblings ordered", async () => {
+      const timeline = createAnimateTimeline({
+        now: () => 0,
+        maxBacklogMs: 200,
+      });
+      const list = createAnimatePlugin({ stagger: 50, timeline });
+      const heading = createAnimatePlugin({ stagger: 50, timeline });
+
+      timeline.beginPass(0);
+      const words = Array.from({ length: 20 }, (_, i) => `w${i}`).join(" ");
+      const listHtml = await processHtml(`<p>${words}</p>`, list);
+      const headHtml = await processHtml("<h2>Next</h2>", heading);
+      timeline.commitPass();
+
+      const listDelays = delaysOf(listHtml);
+      const headDelays = delaysOf(headHtml);
+
+      expect(Math.max(0, ...listDelays)).toBeLessThanOrEqual(200);
+      for (let i = 1; i < listDelays.length; i += 1) {
+        expect(listDelays[i]).toBeGreaterThan(listDelays[i - 1]);
+      }
+      expect(Math.min(...headDelays)).toBeGreaterThanOrEqual(
+        Math.max(0, ...listDelays)
+      );
+    });
+
+    it("long list then heading stays serialized under default budget", async () => {
+      const timeline = createAnimateTimeline({ now: () => 0 });
+      const list = createAnimatePlugin({ stagger: 40, timeline });
+      const heading = createAnimatePlugin({ stagger: 40, timeline });
+
+      timeline.beginPass(0);
+      const words = Array.from({ length: 25 }, (_, i) => `item${i}`).join(" ");
+      const listHtml = await processHtml(`<ul><li>${words}</li></ul>`, list);
+      const headHtml = await processHtml("<h2>Done</h2>", heading);
+      timeline.commitPass();
+
+      const listMax = Math.max(0, ...delaysOf(listHtml));
+      const headMin = Math.min(
+        ...(delaysOf(headHtml).length ? delaysOf(headHtml) : [0])
+      );
+
+      // List cascade fits in the budget (with min-step floor it may overshoot
+      // slightly past maxBacklog if a prior batch already filled it).
+      expect(listMax).toBeLessThanOrEqual(MAX_ANIMATION_BACKLOG_MS + 1);
+      expect(headMin).toBeGreaterThanOrEqual(listMax);
+    });
+
+    it("plateaus when stream outpaces stagger (compressed, not growing)", async () => {
+      let now = 0;
+      const stagger = 40;
+      const timeline = createAnimateTimeline({ now: () => now });
+      const block = createAnimatePlugin({ stagger, timeline });
+      const maxDelayPerTick: number[] = [];
+
+      for (let tick = 0; tick < 20; tick += 1) {
+        const words = Array.from(
+          { length: (tick + 1) * 3 },
+          (_, i) => `w${i}`
+        ).join(" ");
+        timeline.beginPass(now);
+        const result = await processHtml(`<p>${words}</p>`, block);
+        timeline.commitPass();
+        block.commit();
+        maxDelayPerTick.push(Math.max(0, ...delaysOf(result)));
+        now += 50;
+      }
+
+      // Under compression every batch fits in the budget (±1ms for float→int).
+      expect(Math.max(...maxDelayPerTick)).toBeLessThanOrEqual(
+        MAX_ANIMATION_BACKLOG_MS + 1
+      );
+      // Not growing unboundedly — later ticks stay near the ceiling.
+      const late = maxDelayPerTick.slice(10);
+      expect(Math.max(...late) - Math.min(...late)).toBeLessThanOrEqual(
+        MAX_ANIMATION_BACKLOG_MS
+      );
+    });
+
+    it("multi-block pass keeps a cascade after the budget is filled", async () => {
+      // Fresh mount of 5 paragraphs — first-come budget would give blocks
+      // 2+ step=0 (all words simultaneous, #482-shaped). Min-step floor keeps
+      // a cascade going, with slight budget overshoot.
+      const timeline = createAnimateTimeline({
+        now: () => 0,
+        maxBacklogMs: 200,
+      });
+      const plugins = Array.from({ length: 5 }, () =>
+        createAnimatePlugin({ stagger: 40, timeline })
+      );
+
+      timeline.beginPass(0);
+      const results: number[][] = [];
+      for (const p of plugins) {
+        const words = Array.from({ length: 6 }, (_, i) => `w${i}`).join(" ");
+        results.push(
+          delaysOf(await processHtml(`<p>${words}</p>`, p))
+        );
+      }
+      timeline.commitPass();
+
+      // Every block has a non-zero internal cascade (not all equal).
+      for (const delays of results) {
+        expect(delays.length).toBeGreaterThan(1);
+        expect(new Set(delays).size).toBeGreaterThan(1);
+      }
+      // Blocks stay ordered: each block's first word ≥ previous block's last.
+      for (let i = 1; i < results.length; i += 1) {
+        const prevLast = Math.max(...results[i - 1]);
+        const thisFirst = Math.min(...results[i]);
+        expect(thisFirst).toBeGreaterThanOrEqual(prevLast);
+      }
+    });
+
+    it("honours stagger:0 (no cascade, no min-step floor)", async () => {
+      const timeline = createAnimateTimeline({ now: () => 0 });
+      const plugin = createAnimatePlugin({ stagger: 0, timeline });
+      timeline.beginPass(0);
+      const result = await processHtml("<p>one two three four</p>", plugin);
+      timeline.commitPass();
+      expect(delaysOf(result)).toEqual([]);
+    });
+  });
+
   describe("list marker", () => {
     it("should stamp marker animation vars on the list item", async () => {
       const result = await processHtml("<ul><li>Hello world</li></ul>");
@@ -310,8 +565,6 @@ describe("animate plugin", () => {
         plugin
       );
       const delays = result.match(/--sd-marker-delay:\d+ms/g) ?? [];
-      // First item's first word has delay 0; second item's first word is the
-      // third animated word in the block → 2 * 40ms.
       expect(delays).toEqual([
         "--sd-marker-delay:0ms",
         "--sd-marker-delay:80ms",
@@ -328,16 +581,12 @@ describe("animate plugin", () => {
     it("should not re-animate the marker of an already-rendered item", async () => {
       const plugin = createAnimatePlugin();
       await processHtml("<ul><li>Hello</li></ul>", plugin);
-      const prevCount = plugin.getLastRenderCharCount();
-
-      plugin.setPrevContentLength(prevCount);
+      plugin.commit();
       const result = await processHtml(
         "<ul><li>Hello</li><li>World</li></ul>",
         plugin
       );
-
       const durations = result.match(/--sd-marker-duration:\d+ms/g) ?? [];
-      // First (already-shown) item → 0ms; newly added item → 150ms.
       expect(durations).toEqual([
         "--sd-marker-duration:0ms",
         "--sd-marker-duration:150ms",
@@ -373,9 +622,7 @@ describe("animate plugin", () => {
     it("should not re-animate the checkbox of an already-rendered item", async () => {
       const plugin = createAnimatePlugin();
       await processHtml(TASK_ITEM, plugin);
-      const prevCount = plugin.getLastRenderCharCount();
-
-      plugin.setPrevContentLength(prevCount);
+      plugin.commit();
       const result = await processHtml(TASK_ITEM, plugin);
       const input = result.match(INPUT_TAG_RE)?.[0] ?? "";
       expect(input).toContain("--sd-duration:0ms");
@@ -390,16 +637,12 @@ describe("animate plugin", () => {
     });
 
     it("should not let a parent item capture a nested item's checkbox", async () => {
-      // A regular outer item containing a task sub-item: the outer item has no
-      // checkbox of its own and must not stamp the nested one.
       const result = await processHtml(
         '<ul><li>Outer item<ul><li class="task-list-item">' +
           '<input type="checkbox"/> Nested task</li></ul></li></ul>'
       );
       const inputs = result.match(INPUT_TAG_GLOBAL_RE) ?? [];
       expect(inputs).toHaveLength(1);
-      // The lone checkbox should be tagged once, with the nested item's own
-      // delay. It is the 3rd animated word ("Outer"=0, "item"=40, "Nested"=80).
       expect(inputs[0]).toContain("data-sd-animate");
       expect(inputs[0]).toContain("--sd-delay:80ms");
     });
@@ -444,158 +687,8 @@ describe("animate plugin", () => {
     it("should advance the stagger sequence alongside words", async () => {
       const plugin = createAnimatePlugin({ stagger: 50 });
       const result = await processHtml("<p>Hello</p><hr/><p>World</p>", plugin);
-      // Hello=word0(delay 0), hr=slot1(delay 50), World=word2(delay 100)
       expect(result).toContain("--sd-delay:50ms");
       expect(result).toContain("--sd-delay:100ms");
-    });
-  });
-
-  describe("link whitespace behavior", () => {
-    it("should attach whitespace inside links", async () => {
-      const result = await processHtml(
-        '<a href="https://example.com">Hello world</a>'
-      );
-
-      expect(result).toContain(">Hello ");
-      expect(result).toContain(">world<");
-    });
-
-    it("should attach whitespace to the preceding animated word inside links", async () => {
-      const result = await processHtml('<a href="/">Hello world</a>');
-      expect(result).toMatch(LINK_PATTERN_RE);
-    });
-
-    it("should preserve whitespace between spans in normal text", async () => {
-      const result = await processHtml("<p>Hello world</p>");
-
-      expect(result).toMatch(SPAN_GAP_RE);
-    });
-
-    it("should preserve leading whitespace before the first animated link word", async () => {
-      const result = await processHtml('<a href="/"> Hello world</a>');
-      expect(result).toMatch(LINK_PATTERN_LEADING_SPACE_RE);
-    });
-
-    it("should keep character splitting unchanged inside links", async () => {
-      const plugin = createAnimatePlugin({ sep: "char" });
-      const result = await processHtml('<a href="/">Hi there</a>', plugin);
-      expect(result).toMatch(SPAN_GAP_RE);
-      expect(result).toContain(">H<");
-      expect(result).toContain(">i<");
-      expect(result).toContain(">t<");
-    });
-
-    it("should only modify whitespace inside links in mixed content", async () => {
-      const result = await processHtml(
-        '<p>Hello <a href="#">linked text</a> world</p>'
-      );
-
-      // normal text should still have gaps
-      expect(result).toContain(">Hello<");
-      expect(result).toContain(">world<");
-
-      // link should have merged whitespace
-      expect(result).toContain(">linked ");
-    });
-
-    it("should handle multiple links independently", async () => {
-      const result = await processHtml(
-        '<p><a href="#">first link</a> and <a href="#">second link</a></p>'
-      );
-
-      const linkMatches = (result.match(/data-sd-animate/g) || []).length;
-
-      expect(linkMatches).toBeGreaterThan(2);
-      expect(result).toContain(">first ");
-      expect(result).toContain(">second ");
-    });
-
-    it("should handle nested formatting inside links", async () => {
-      const result = await processHtml(
-        '<a href="#"><strong>Hello world</strong></a>'
-      );
-
-      expect(result).toContain(">Hello ");
-      expect(result).toContain(">world<");
-    });
-
-    it("should handle single-word links", async () => {
-      const result = await processHtml('<a href="#">Hello</a>');
-
-      expect(result).toContain(">Hello<");
-    });
-
-    it("should not affect skip tags like code", async () => {
-      const result = await processHtml("<code>Hello world</code>");
-
-      expect(result).not.toContain("data-sd-animate");
-    });
-  });
-
-  describe("shared cursor (cross-block chaining)", () => {
-    it("should chain delays across sibling blocks", async () => {
-      const cursor = createAnimateCursor();
-      const block0 = createAnimatePlugin({ stagger: 50, cursor });
-      const block1 = createAnimatePlugin({ stagger: 50, cursor });
-
-      // Simulate a render pass: reset cursor, then render block0, block1
-      cursor.current = 0;
-      const result0 = await processHtml("<p>Hello world</p>", block0);
-      const result1 = await processHtml("<p>foo bar</p>", block1);
-
-      // block0: "Hello"=0ms (omitted), "world"=50ms
-      // block1: "foo"=100ms, "bar"=150ms  (cursor was 2 after block0)
-      const delays0 = result0.match(/--sd-delay:\d+ms/g) ?? [];
-      const delays1 = result1.match(/--sd-delay:\d+ms/g) ?? [];
-
-      expect(delays0).toEqual(["--sd-delay:50ms"]);
-      expect(delays1).toEqual(["--sd-delay:100ms", "--sd-delay:150ms"]);
-    });
-
-    it("should reset delays when cursor is reset to 0", async () => {
-      const cursor = createAnimateCursor();
-      const block0 = createAnimatePlugin({ stagger: 50, cursor });
-      const block1 = createAnimatePlugin({ stagger: 50, cursor });
-
-      // First render pass
-      cursor.current = 0;
-      await processHtml("<p>Hello world</p>", block0);
-
-      // Second render pass — reset cursor so block1 starts from 0 again
-      cursor.current = 0;
-      await processHtml("<p>Hello world</p>", block0);
-      const result1 = await processHtml("<p>foo bar</p>", block1);
-
-      // block1 should chain after block0's 2 new words: "foo"=100ms, "bar"=150ms
-      const delays1 = result1.match(/--sd-delay:\d+ms/g) ?? [];
-      expect(delays1).toEqual(["--sd-delay:100ms", "--sd-delay:150ms"]);
-    });
-
-    it("cursor.current advances by the number of newly animated words", async () => {
-      const cursor = createAnimateCursor();
-      const block0 = createAnimatePlugin({ stagger: 50, cursor });
-
-      cursor.current = 0;
-      await processHtml("<p>Hello world foo</p>", block0);
-      // block0 animated 3 words → cursor should be 3
-      expect(cursor.current).toBe(3);
-    });
-
-    it("cursor should not advance for skipped (already-rendered) words", async () => {
-      const cursor = createAnimateCursor();
-      const block0 = createAnimatePlugin({ stagger: 50, cursor });
-
-      // First render: 3 words
-      cursor.current = 0;
-      await processHtml("<p>Hello world foo</p>", block0);
-      const prevCount = block0.getLastRenderCharCount();
-
-      // Second render: mark first render's content as already visible
-      cursor.current = 0;
-      block0.setPrevContentLength(prevCount);
-      await processHtml("<p>Hello world foo bar</p>", block0);
-      // Only "bar" is new → cursor should be 1
-      expect(cursor.current).toBe(1);
     });
   });
 });
