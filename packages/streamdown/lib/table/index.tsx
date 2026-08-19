@@ -1,7 +1,8 @@
-import { type ComponentProps, useContext, useEffect, useRef } from "react";
+import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
 import { useCn } from "../prefix-context";
 import { DefaultScrollable } from "../scrollable";
+import { usePinnedScroll } from "../use-pinned-scroll";
 import { resolveMaxHeight } from "../utils";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
@@ -28,37 +29,12 @@ export const Table = ({
   const cn = useCn();
   const { isAnimating, scrollable } = useContext(StreamdownContext);
   const Scrollable = scrollable ?? DefaultScrollable;
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const pinnedRef = useRef<boolean>(true);
   const maxHeightStyle = resolveMaxHeight(maxHeight);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!(el && maxHeightStyle)) {
-      return;
-    }
-    const handleScroll = () => {
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
-      pinnedRef.current = atBottom;
-    };
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [maxHeightStyle]);
-
-  // No deps array: runs on every render so new streaming rows trigger auto-scroll
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!(el && maxHeightStyle && isAnimating && pinnedRef.current)) {
-      return;
-    }
-    el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
+  const scrollRef = usePinnedScroll({
+    content: children,
+    enabled: Boolean(maxHeightStyle),
+    isAnimating,
   });
-
-  useEffect(() => {
-    if (!isAnimating) {
-      pinnedRef.current = true;
-    }
-  }, [isAnimating]);
 
   const hasCopy = showControls && showCopy;
   const hasDownload = showControls && showDownload;
