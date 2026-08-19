@@ -61,11 +61,6 @@ const shouldSkipAsterisk = (
     return true;
   }
 
-  // Skip if asterisk is word-internal (between word characters)
-  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-    return true;
-  }
-
   // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
   // This also catches list markers (e.g., "* item") since they have whitespace on both sides
   const prevIsWhitespace =
@@ -79,21 +74,39 @@ const shouldSkipAsterisk = (
   return false;
 };
 
+const isWordInternalAsterisk = (prevChar: string, nextChar: string): boolean =>
+  Boolean(prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar));
+
+// Intraword asterisks are counted only while resolving an active emphasis
+// chain. A lone word-internal * stays literal; a closer can end a run and
+// start another in the same word (e.g. *foo*bar*baz).
 export const countSingleAsterisks = (text: string): number => {
   const scan = getScan(text);
   let count = 0;
+  let inWordAsteriskChain = false;
   const len = text.length;
 
   for (let index = 0; index < len; index += 1) {
     if (text[index] !== "*" || scan.regions[index] !== REGION.PROSE) {
+      if (scan.regions[index] !== REGION.PROSE || !isWordChar(text[index])) {
+        inWordAsteriskChain = false;
+      }
       continue;
     }
 
     const prevChar = index > 0 ? text[index - 1] : "";
     const nextChar = index < len - 1 ? text[index + 1] : "";
+    const isWordInternal = isWordInternalAsterisk(prevChar, nextChar);
+
+    // Count an intraword * when it closes an open run. After that, another
+    // intraword * in the same word can open a new run.
+    if (isWordInternal && count % 2 === 0 && !inWordAsteriskChain) {
+      continue;
+    }
 
     if (!shouldSkipAsterisk(scan, index, prevChar, nextChar)) {
       count += 1;
+      inWordAsteriskChain = isWordInternal;
     }
   }
 
