@@ -432,9 +432,9 @@ export const Block = memo(
     // (#570 secondary). The plugin seeds prevContentLength from its own
     // committedCharCount at the start of every rehype run.
     //
-    // Span teardown on settle (#570 primary) is handled by stamping
-    // data-sd-animated on ancestors in the plugin and comparing that prop in
-    // sameClassAndNode — no Markdown remount key needed.
+    // Span teardown on settle (#570 primary) is handled by the markup
+    // comparators: the span-free reparse produces different `children`, so
+    // sameRenderedProps commits it — no Markdown remount key needed.
     useLayoutEffect(() => {
       animatePluginProp?.commit();
     });
