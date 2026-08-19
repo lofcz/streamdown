@@ -1,5 +1,11 @@
 # remend
 
+## 1.4.2
+
+### Patch Changes
+
+- 4c0ea94: Preserve complete italic emphasis when a closing asterisk is followed by word text.
+
 ## 1.4.1
 
 ### Patch Changes
