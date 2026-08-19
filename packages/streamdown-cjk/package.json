@@ -31,7 +31,7 @@
     "@types/mdast": "^4.0.4",
     "@vitest/coverage-v8": "^4.0.15",
     "@types/unist": "^3.0.3",
-    "remark-gfm": "^4.0.1",
+    "remark-gfm": "npm:@lofcz/remark-gfm@^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsup": "^8.5.1",

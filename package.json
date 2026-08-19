@@ -28,7 +28,8 @@
   },
   "pnpm": {
     "overrides": {
-      "lodash-es": ">=4.17.23"
+      "lodash-es": ">=4.17.23",
+      "remark-gfm": "npm:@lofcz/remark-gfm@^4.0.1"
     }
   },
   "packageManager": "pnpm@10.30.3",
