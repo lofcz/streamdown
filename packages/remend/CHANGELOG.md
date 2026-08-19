@@ -1,5 +1,12 @@
 # remend
 
+## 1.4.1
+
+### Patch Changes
+
+- f6e7b94: Fix crash on iOS 16.0-16.2 / Safari < 16.3 by compiling lookbehind regexes only after a one-time constructor probe (#519). Engines that support lookbehind keep the native pattern; older JSCore falls back to a consuming capture. `remark-gfm` now resolves to `@lofcz/remark-gfm`, which pulls in the lookbehind-safe autolink-literal fork.
+- 1ee2732: Preserve complete italic emphasis when a closing asterisk is followed by word text.
+
 ## 1.4.0
 
 ### Minor Changes

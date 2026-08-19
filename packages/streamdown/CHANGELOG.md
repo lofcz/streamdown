@@ -1,5 +1,58 @@
 # streamdown
 
+## 2.10.1
+
+### Patch Changes
+
+- 09f0bc2: Forward rest props through block code. The `code` component spread its rest props on the inline branch and dropped them on the block branch, so an attribute a consumer put on a fenced code element never reached the DOM. `CodeBlockBody` now takes part in that comparison, so a forwarded attribute updates instead of keeping the value it first rendered with.
+- 245eac4: Fix `dir="auto"` in static mode to detect text direction per semantic block (instead of once for the whole document), keep code LTR, and use content-majority direction for mixed-script prose.
+- 316eed8: Added accessibility improvements for code block controls by adding aria labels to copy/download buttons and announcing copy success state for screen readers.
+- 4e41f93: fix(animate): serialize streaming animation across blocks
+
+  Word stagger now runs on a shared wall-clock timeline so sibling sections no longer fade in on top of each other during streaming. Related cleanup: trailing spaces stay inside animated spans (no early link underlines), animate wrappers drop when streaming ends, already-seen text stays steady under StrictMode, and un-animated streaming is no longer deferred behind a starvable transition.
+
+  Inspired by #493, #531, and #536.
+
+  Fixes #482
+  Fixes #535
+  Fixes #550
+  Fixes #570
+
+- 17b5ed8: Add `aria-hidden="true"` to decorative SVG icon components so screen readers rely on parent button labels instead of unlabeled icons.
+- f6e7b94: Fix crash on iOS 16.0-16.2 / Safari < 16.3 by compiling lookbehind regexes only after a one-time constructor probe (#519). Engines that support lookbehind keep the native pattern; older JSCore falls back to a consuming capture. `remark-gfm` now resolves to `@lofcz/remark-gfm`, which pulls in the lookbehind-safe autolink-literal fork.
+- 8798fd0: fix(mermaid): add aria-hidden to decorative SVG icons in mermaid toolbar buttons
+
+  Mermaid toolbar buttons (download, fullscreen, pan/zoom controls) already have
+  accessible titles/labels, but the inline SVG icons were exposed to the accessibility
+  tree causing "Content with images must be labeled" warnings. Added aria-hidden={true}
+  to all decorative icon elements in download-button, fullscreen-button, and pan-zoom
+  components.
+
+  Fixes #485
+
+- b200263: Fix: `shikiTheme` prop priority chain is now fully reachable.
+
+  Previously, `shikiTheme` had a default value in the props destructuring (`= defaultShikiTheme`), making the `plugins?.code?.getThemes()` fallback unreachable in both orderings. The fix removes the destructuring default and moves it to the end of the nullish coalescing chain, so all three levels are reachable:
+
+  1. Explicit `shikiTheme` prop (highest priority)
+  2. Code plugin's `getThemes()` (second priority)
+  3. Built-in `defaultShikiTheme` (final fallback)
+
+- b0e4745: Fix accessibility warnings for Mermaid toolbar icon buttons:
+
+  - Add `aria-hidden="true"` to all decorative SVG icons to hide them from screen readers
+  - Add `aria-label` attributes to all icon-only buttons for proper screen reader announcements
+  - Add translation keys (`zoomIn`, `zoomOut`, `resetView`) for zoom controls
+
+- 9cf31dc: Re-render memoized markdown components when their rendered output changes. The comparators compared source position, so a replacement of the same length — occupying the same lines and columns — was treated as unchanged and the component kept rendering the previous text.
+- c71ddf3: - Fixed table copy losing line breaks inside cells containing `<br>` elements.
+  - Preserved multiline content during table data extraction.
+  - Improved copied Markdown, CSV, and TSV output consistency for multiline cells.
+  - Added coverage for `<br>` handling in table extraction.
+- 1f9ae1c: - Fix code block line wrapping when line numbers are disabled.
+  - Ensure code block lines are rendered as block elements regardless of the `lineNumbers` setting.
+  - Prevent multiple code lines from collapsing into a single visual line when `lineNumbers={false}`.
+
 ## 2.10.0
 
 ### Minor Changes
