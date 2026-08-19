@@ -498,10 +498,7 @@ const LinkComponent = ({
   );
 };
 
-const MemoA = memo<AProps>(
-  LinkComponent,
-  (p, n) => sameRenderedProps(p, n)
-);
+const MemoA = memo<AProps>(LinkComponent, (p, n) => sameRenderedProps(p, n));
 MemoA.displayName = "MarkdownA";
 
 type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<

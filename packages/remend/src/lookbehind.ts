@@ -8,6 +8,9 @@
  */
 export const supportsLookbehind: boolean = (() => {
   try {
+    // Must stay a constructor: a `/(?<=)/` literal throws at parse time on
+    // Safari < 16.3 and cannot be caught.
+    // biome-ignore lint/complexity/useRegexLiterals: "lookbehind must not appear as a regex literal"
     return Boolean(new RegExp("(?<=)"));
   } catch {
     return false;

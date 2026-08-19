@@ -21,38 +21,42 @@ const SINGLE_TILDE_LOOKBEHIND = `(?<=${WORD})~(?!~)(?=${WORD})`;
 const SINGLE_TILDE_CAPTURE = `(${WORD})~(?!~)(?=${WORD})`;
 const SINGLE_TILDE_FLAGS = "gu";
 
-const createLookbehindHandler = (pattern: RegExp) => (text: string): string => {
-  if (!(text && typeof text === "string" && text.includes("~"))) {
-    return text;
-  }
-
-  return text.replace(pattern, (match, offset: number) => {
-    if (isInsideCodeBlock(text, offset)) {
-      return match;
+const createLookbehindHandler =
+  (pattern: RegExp) =>
+  (text: string): string => {
+    if (!(text && typeof text === "string" && text.includes("~"))) {
+      return text;
     }
 
-    return "\\~";
-  });
-};
-
-const createCaptureHandler = (pattern: RegExp) => (text: string): string => {
-  if (!(text && typeof text === "string" && text.includes("~"))) {
-    return text;
-  }
-
-  return text.replace(
-    pattern,
-    (match, precedingChar: string, offset: number) => {
-      const tildeOffset = offset + precedingChar.length;
-
-      if (isInsideCodeBlock(text, tildeOffset)) {
+    return text.replace(pattern, (match, offset: number) => {
+      if (isInsideCodeBlock(text, offset)) {
         return match;
       }
 
-      return `${precedingChar}\\~`;
+      return "\\~";
+    });
+  };
+
+const createCaptureHandler =
+  (pattern: RegExp) =>
+  (text: string): string => {
+    if (!(text && typeof text === "string" && text.includes("~"))) {
+      return text;
     }
-  );
-};
+
+    return text.replace(
+      pattern,
+      (match, precedingChar: string, offset: number) => {
+        const tildeOffset = offset + precedingChar.length;
+
+        if (isInsideCodeBlock(text, tildeOffset)) {
+          return match;
+        }
+
+        return `${precedingChar}\\~`;
+      }
+    );
+  };
 
 /** Safari < 16.3 path — consume the preceding word char and write it back. */
 export const handleSingleTildeEscapeCapture = createCaptureHandler(

@@ -414,6 +414,7 @@ const countNewWords = (
     (node: Node) =>
       node.type === "text" ||
       (isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName)),
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "visitParents callback walks text and void nodes"
     (node: Node, ancestors) => {
       if (hasSkipAncestor(ancestors, renderState.animateCodeBlocks)) {
         return SKIP;
@@ -429,7 +430,8 @@ const countNewWords = (
         charPos += text.length;
         return;
       }
-      const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
+      const parts =
+        config.sep === "char" ? splitByChar(text) : splitByWord(text);
       for (const part of parts) {
         const partStart = charPos;
         charPos += part.length;
@@ -461,12 +463,7 @@ const processVoidElement = (
   const delay = skipAnimation
     ? 0
     : schedule.baseDelay + charCounter.newIndex++ * schedule.step;
-  stampAnimation(
-    element,
-    config,
-    skipAnimation ? 0 : config.duration,
-    delay
-  );
+  stampAnimation(element, config, skipAnimation ? 0 : config.duration, delay);
   markAnimatedAncestors(ancestors);
 };
 

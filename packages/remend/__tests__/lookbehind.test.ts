@@ -7,7 +7,7 @@ import {
   handleSingleTildeEscapeLookbehind,
 } from "../src/single-tilde-handler";
 
-const samples: Array<[input: string, expected: string]> = [
+const samples: [input: string, expected: string][] = [
   ["20~25°C", "20\\~25°C"],
   ["20~25°C。20~25°C", "20\\~25°C。20\\~25°C"],
   ["foo~bar", "foo\\~bar"],
