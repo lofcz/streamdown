@@ -90,8 +90,8 @@ export type CalloutStyleResolver = (color?: string) => CSSProperties;
 /**
  * Props passed to the component used for a horizontal-scroll region
  * (code-block body, table inner scroll). `scrollRef` must be attached to the
- * actual scrolling element so Streamdown's auto-pin-on-stream logic keeps
- * working.
+ * actual scrolling viewport (callback refs are used so async scrollbar init,
+ * e.g. OverlayScrollbars, can assign the viewport after first paint).
  */
 export type ScrollableProps = ComponentProps<"div"> & {
   scrollRef?: React.Ref<HTMLDivElement>;

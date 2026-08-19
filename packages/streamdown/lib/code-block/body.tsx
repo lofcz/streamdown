@@ -3,14 +3,13 @@ import {
   type CSSProperties,
   memo,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
 } from "react";
 import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { DefaultScrollable } from "../scrollable";
+import { usePinnedScroll } from "../use-pinned-scroll";
 import { cn as baseCn, resolveMaxHeight } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
@@ -73,37 +72,12 @@ export const CodeBlockBody = memo(
     const cn = useCn();
     const { isAnimating, scrollable } = useContext(StreamdownContext);
     const Scrollable = scrollable ?? DefaultScrollable;
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const pinnedRef = useRef<boolean>(true);
     const maxHeightStyle = resolveMaxHeight(maxHeight);
-
-    useEffect(() => {
-      const el = scrollRef.current;
-      if (!(el && maxHeightStyle)) {
-        return;
-      }
-      const handleScroll = () => {
-        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
-        pinnedRef.current = atBottom;
-      };
-      el.addEventListener("scroll", handleScroll, { passive: true });
-      return () => el.removeEventListener("scroll", handleScroll);
-    }, [maxHeightStyle]);
-
-    // Include `result` so streaming token updates re-pin to the bottom.
-    useEffect(() => {
-      const el = scrollRef.current;
-      if (!(el && maxHeightStyle && isAnimating && pinnedRef.current)) {
-        return;
-      }
-      el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
-    }, [isAnimating, maxHeightStyle]);
-
-    useEffect(() => {
-      if (!isAnimating) {
-        pinnedRef.current = true;
-      }
-    }, [isAnimating]);
+    const scrollRef = usePinnedScroll({
+      content: result,
+      enabled: Boolean(maxHeightStyle),
+      isAnimating,
+    });
 
     // Prefix the pre-computed line number classes
     const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
