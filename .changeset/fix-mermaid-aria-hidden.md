@@ -1,5 +1,5 @@
 ---
-'streamdown': patch
+"@lofcz/streamdown": patch
 ---
 
 fix(mermaid): add aria-hidden to decorative SVG icons in mermaid toolbar buttons

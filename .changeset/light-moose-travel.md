@@ -1,5 +1,5 @@
 ---
-"streamdown": patch
+"@lofcz/streamdown": patch
 ---
 
 Fix accessibility warnings for Mermaid toolbar icon buttons:
