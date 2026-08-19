@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"@lofcz/streamdown": patch
 ---
 
 fix(animate): serialize streaming animation across blocks
