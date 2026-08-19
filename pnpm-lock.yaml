@@ -6,6 +6,7 @@ settings:
 
 overrides:
   lodash-es: '>=4.17.23'
+  remark-gfm: npm:@lofcz/remark-gfm@^4.0.1
 
 importers:
 
@@ -102,8 +103,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(unified@11.0.5)
       remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: npm:@lofcz/remark-gfm@^4.0.1
+        version: '@lofcz/remark-gfm@4.0.1'
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0
@@ -350,8 +351,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: npm:@lofcz/remark-gfm@^4.0.1
+        version: '@lofcz/remark-gfm@4.0.1'
       remark-parse:
         specifier: ^11.0.0
         version: 11.0.0
@@ -460,8 +461,8 @@ importers:
         specifier: ^4.0.15
         version: 4.0.17(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(tsx@4.21.0))
       remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: npm:@lofcz/remark-gfm@^4.0.1
+        version: '@lofcz/remark-gfm@4.0.1'
       remark-parse:
         specifier: ^11.0.0
         version: 11.0.0
@@ -1416,6 +1417,15 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lofcz/mdast-util-gfm-autolink-literal@2.0.1':
+    resolution: {integrity: sha512-/yaqbaK+Ga2q4xilicI4TikOr6Kp3GermjxVIG94Kgrxgdr72K1HAyib9VK9AFsewCz6R9YY4JYRnk7sXUqB5w==}
+
+  '@lofcz/mdast-util-gfm@3.1.0':
+    resolution: {integrity: sha512-YOZSkJTSFMwqVt9TJPmEVqqqm4X1ixDE8Y8r+ttnUe2MBMB/9ZGOmF9co2PDYhHL1/DwHpjyx7O49XBb356K4g==}
+
+  '@lofcz/remark-gfm@4.0.1':
+    resolution: {integrity: sha512-RzjeWkrs/rr638jzpTo/aqUUwUg9HNihlTDrupmSILqVI3ZtO1YUu3nTM126j8wEpw2ftc3pscDidXNQaOwXUw==}
 
   '@lofcz/remend@1.3.1':
     resolution: {integrity: sha512-jclxXENMQnsySvt+R27mN8d5slFnHnH15Jr2AZPrzSt+vFOyksq5lKQ9HBupNm0E6GhKvDpCrvvcnnfdB5qbHg==}
@@ -4489,9 +4499,6 @@ packages:
   mdast-util-from-markdown@2.0.2:
     resolution: {integrity: sha512-uZhTV/8NBuw0WHkPTrCqDOl0zVe1BIng5ZtHoDk49ME1qqcjYmmLmOf0gELgcRMxN4w2iuIeVso5/6QymSrgmA==}
 
-  mdast-util-gfm-autolink-literal@2.0.1:
-    resolution: {integrity: sha512-5HVP2MKaP6L+G6YaxPNjuL0BPrq9orG3TsrZ9YXbA3vDw/ACI4MEsnoDpn6ZNm7GnZgtAcONJyPhOP8tNJQavQ==}
-
   mdast-util-gfm-footnote@2.1.0:
     resolution: {integrity: sha512-sqpDWlsHn7Ac9GNZQMeUzPQSMzR6Wv0WKRNvQRg0KqHh02fpTz69Qc1QSseNX29bhz1ROIyNyxExfawVKTm1GQ==}
 
@@ -4503,9 +4510,6 @@ packages:
 
   mdast-util-gfm-task-list-item@2.0.0:
     resolution: {integrity: sha512-IrtvNvjxC1o06taBAVJznEnkiHxLFTzgonUdy8hzFVeDun0uTjxxrRGVaNFqkU1wJR3RBPEfsxmU6jDWPofrTQ==}
-
-  mdast-util-gfm@3.1.0:
-    resolution: {integrity: sha512-0ulfdQOM3ysHhCJ1p06l0b0VKlhU0wuQs3thxZQagjcjPrlFRqY215uZGHHJan9GEAXd9MbfPjFJz+qMkVR6zQ==}
 
   mdast-util-math@3.0.0:
     resolution: {integrity: sha512-Tl9GBNeG/AhJnQM221bJR2HPvLOSnLE/T9cJI9tlc6zwQk2nPk/4f0cHkOdEixQPC/j8UtKDdITswvLAy1OZ1w==}
@@ -5178,9 +5182,6 @@ packages:
     peerDependenciesMeta:
       '@types/mdast':
         optional: true
-
-  remark-gfm@4.0.1:
-    resolution: {integrity: sha512-1quofZ2RQ9EWdeN34S79+KExV1764+wCUGop5CPL1WGdD0ocPpu91lzPGbwWMECpEpd42kJGQwzRfyov9j4yNg==}
 
   remark-math@6.0.0:
     resolution: {integrity: sha512-MMqgnP74Igy+S3WwnhQ7kqGlEerTETXMvJhrUzDikVZ2/uogJCb+WHUg97hK9/jcfc0dkD73s3LN8zU49cTEtA==}
@@ -6742,6 +6743,37 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@lofcz/mdast-util-gfm-autolink-literal@2.0.1':
+    dependencies:
+      '@types/mdast': 4.0.4
+      ccount: 2.0.1
+      devlop: 1.1.0
+      mdast-util-find-and-replace: 3.0.2
+      micromark-util-character: 2.1.1
+
+  '@lofcz/mdast-util-gfm@3.1.0':
+    dependencies:
+      mdast-util-from-markdown: 2.0.2
+      mdast-util-gfm-autolink-literal: '@lofcz/mdast-util-gfm-autolink-literal@2.0.1'
+      mdast-util-gfm-footnote: 2.1.0
+      mdast-util-gfm-strikethrough: 2.0.0
+      mdast-util-gfm-table: 2.0.0
+      mdast-util-gfm-task-list-item: 2.0.0
+      mdast-util-to-markdown: 2.1.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@lofcz/remark-gfm@4.0.1':
+    dependencies:
+      '@types/mdast': 4.0.4
+      mdast-util-gfm: '@lofcz/mdast-util-gfm@3.1.0'
+      micromark-extension-gfm: 3.0.0
+      remark-parse: 11.0.0
+      remark-stringify: 11.0.0
+      unified: 11.0.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@lofcz/remend@1.3.1': {}
 
@@ -9191,7 +9223,7 @@ snapshots:
       npm-to-yarn: 3.0.1
       path-to-regexp: 8.3.0
       remark: 15.0.1
-      remark-gfm: 4.0.1
+      remark-gfm: '@lofcz/remark-gfm@4.0.1'
       remark-rehype: 11.1.2
       scroll-into-view-if-needed: 3.1.0
       shiki: 3.21.0
@@ -9802,14 +9834,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm-autolink-literal@2.0.1:
-    dependencies:
-      '@types/mdast': 4.0.4
-      ccount: 2.0.1
-      devlop: 1.1.0
-      mdast-util-find-and-replace: 3.0.2
-      micromark-util-character: 2.1.1
-
   mdast-util-gfm-footnote@2.1.0:
     dependencies:
       '@types/mdast': 4.0.4
@@ -9843,18 +9867,6 @@ snapshots:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.2
-      mdast-util-to-markdown: 2.1.2
-    transitivePeerDependencies:
-      - supports-color
-
-  mdast-util-gfm@3.1.0:
-    dependencies:
-      mdast-util-from-markdown: 2.0.2
-      mdast-util-gfm-autolink-literal: 2.0.1
-      mdast-util-gfm-footnote: 2.1.0
-      mdast-util-gfm-strikethrough: 2.0.0
-      mdast-util-gfm-table: 2.0.0
-      mdast-util-gfm-task-list-item: 2.0.0
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -10866,17 +10878,6 @@ snapshots:
     transitivePeerDependencies:
       - micromark
       - micromark-util-types
-
-  remark-gfm@4.0.1:
-    dependencies:
-      '@types/mdast': 4.0.4
-      mdast-util-gfm: 3.1.0
-      micromark-extension-gfm: 3.0.0
-      remark-parse: 11.0.0
-      remark-stringify: 11.0.0
-      unified: 11.0.5
-    transitivePeerDependencies:
-      - supports-color
 
   remark-math@6.0.0:
     dependencies:
