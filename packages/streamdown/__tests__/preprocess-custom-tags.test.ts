@@ -10,40 +10,42 @@ describe("preprocessCustomTags", () => {
   it("should replace blank lines inside custom tags with HTML comments", () => {
     const md = "<custom>\nHello\n\nWorld\n</custom>";
     const result = preprocessCustomTags(md, ["custom"]);
-    expect(result).toBe("<custom>\nHello\n<!---->\nWorld\n</custom>\n\n");
+    expect(result).toBe("<custom>\n\nHello\n<!---->\nWorld\n\n</custom>\n\n");
   });
 
-  it("should ensure content is on its own lines when inline with opening tag", () => {
+  it("should ensure blank lines when content is inline with opening tag", () => {
     const md = "<custom>Hello\n\nWorld</custom>";
     const result = preprocessCustomTags(md, ["custom"]);
-    expect(result).toBe("<custom>\nHello\n<!---->\nWorld\n</custom>\n\n");
+    expect(result).toBe("<custom>\n\nHello\n<!---->\nWorld\n\n</custom>\n\n");
   });
 
   it("should handle multiple blank lines", () => {
     const md = "<custom>A\n\nB\n\nC</custom>";
     const result = preprocessCustomTags(md, ["custom"]);
-    expect(result).toBe("<custom>\nA\n<!---->\nB\n<!---->\nC\n</custom>\n\n");
+    expect(result).toBe(
+      "<custom>\n\nA\n<!---->\nB\n<!---->\nC\n\n</custom>\n\n"
+    );
   });
 
   it("should handle multiple tag names", () => {
     const md = "<foo>A\n\nB</foo>\n<bar>C\n\nD</bar>";
     const result = preprocessCustomTags(md, ["foo", "bar"]);
-    expect(result).toContain("<foo>\nA\n<!---->\nB\n</foo>");
-    expect(result).toContain("<bar>\nC\n<!---->\nD\n</bar>");
+    expect(result).toContain("<foo>\n\nA\n<!---->\nB\n\n</foo>");
+    expect(result).toContain("<bar>\n\nC\n<!---->\nD\n\n</bar>");
   });
 
   it("should handle tags with attributes", () => {
     const md = '<custom class="test" id="x">A\n\nB</custom>';
     const result = preprocessCustomTags(md, ["custom"]);
     expect(result).toBe(
-      '<custom class="test" id="x">\nA\n<!---->\nB\n</custom>\n\n'
+      '<custom class="test" id="x">\n\nA\n<!---->\nB\n\n</custom>\n\n'
     );
   });
 
   it("should be case insensitive", () => {
     const md = "<Custom>A\n\nB</Custom>";
     const result = preprocessCustomTags(md, ["custom"]);
-    expect(result).toBe("<Custom>\nA\n<!---->\nB\n</Custom>\n\n");
+    expect(result).toBe("<Custom>\n\nA\n<!---->\nB\n\n</Custom>\n\n");
   });
 
   it("should leave markdown without custom tags unchanged", () => {
@@ -51,28 +53,28 @@ describe("preprocessCustomTags", () => {
     expect(preprocessCustomTags(md, ["custom"])).toBe(md);
   });
 
-  it("should not modify content without blank lines (no newline)", () => {
-    // Single-line content without any newlines is fine as inline HTML
+  it("should not modify same-line content without newlines", () => {
     const md = "<custom>Hello World</custom>";
     expect(preprocessCustomTags(md, ["custom"])).toBe(md);
   });
 
   it("should restructure inline content with a newline followed by ATX heading", () => {
-    // A heading inside inline content would prematurely terminate the custom tag
     const md = "<ai-thinking> hi\n # yes</ai-thinking>";
     const result = preprocessCustomTags(md, ["ai-thinking"]);
-    expect(result).toBe("<ai-thinking>\n hi\n # yes\n</ai-thinking>\n\n");
+    expect(result).toBe("<ai-thinking>\n\n hi\n # yes\n\n</ai-thinking>\n\n");
   });
 
   it("should restructure inline content with any newline (prevents block element splitting)", () => {
     const md = "<custom>hello\nworld</custom>";
     const result = preprocessCustomTags(md, ["custom"]);
-    expect(result).toBe("<custom>\nhello\nworld\n</custom>\n\n");
+    expect(result).toBe("<custom>\n\nhello\nworld\n\n</custom>\n\n");
   });
 
-  it("should not modify tags where content already starts on own line without blank lines", () => {
+  it("should still normalize tags that already start on their own line", () => {
     const md = "<custom>\nHello\n</custom>";
-    expect(preprocessCustomTags(md, ["custom"])).toBe(md);
+    const result = preprocessCustomTags(md, ["custom"]);
+    // Blank-line sandwich is required so nested markdown can parse.
+    expect(result).toBe("<custom>\n\nHello\n\n</custom>\n\n");
   });
 
   it("should handle content on same line as opening tag (issue #456)", () => {
@@ -80,7 +82,52 @@ describe("preprocessCustomTags", () => {
       "<ai-thinking>this is thinking\n\n * why is break?</ai-thinking># Hello World";
     const result = preprocessCustomTags(md, ["ai-thinking"]);
     expect(result).toBe(
-      "<ai-thinking>\nthis is thinking\n<!---->\n * why is break?\n</ai-thinking>\n\n# Hello World"
+      "<ai-thinking>\n\nthis is thinking\n<!---->\n * why is break?\n\n</ai-thinking>\n\n# Hello World"
+    );
+  });
+
+  it("should enable nested markdown for multi-line content", () => {
+    const md = "<ai-thinking>\n**bold**</ai-thinking>";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe("<ai-thinking>\n\n**bold**\n\n</ai-thinking>\n\n");
+  });
+
+  it("should blank-line-interrupt unclosed multi-line tags while streaming", () => {
+    const md = "<ai-thinking>\n**bold**";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe("<ai-thinking>\n\n**bold**");
+  });
+
+  it("should replace internal blank lines on unclosed tags", () => {
+    const md = "<ai-thinking>\nhello\n\n**bold**";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe("<ai-thinking>\n\nhello\n<!---->\n**bold**");
+  });
+
+  it("should not double blank-line unclosed tags that already have one", () => {
+    const md = "<ai-thinking>\n\n**bold**";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe("<ai-thinking>\n\n**bold**");
+  });
+
+  it("should leave unclosed open-only tags without body unchanged", () => {
+    expect(preprocessCustomTags("<ai-thinking>", ["ai-thinking"])).toBe(
+      "<ai-thinking>"
+    );
+    expect(preprocessCustomTags("<ai-thinking>\n", ["ai-thinking"])).toBe(
+      "<ai-thinking>\n"
+    );
+  });
+
+  it("should leave incomplete same-line unclosed tags unchanged", () => {
+    const md = "<ai-thinking>**bol";
+    expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(md);
+  });
+
+  it("rewrites self-closing custom tags to an explicit empty pair", () => {
+    const md = 'before <vfs-cite path="a.pdf" /> after';
+    expect(preprocessCustomTags(md, ["vfs-cite"])).toBe(
+      'before <vfs-cite path="a.pdf" ></vfs-cite> after'
     );
   });
 });
