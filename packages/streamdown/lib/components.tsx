@@ -144,6 +144,22 @@ function sameCodeMeta(
   return prev?.properties?.metastring === next?.properties?.metastring;
 }
 
+/** Text of a `code` element: a string child, or a single element wrapping a string. */
+function getCodeContent(children: React.ReactNode): string | undefined {
+  if (typeof children === "string") {
+    return children;
+  }
+
+  if (isValidElement(children)) {
+    const childContent = propsOf(children).children;
+    if (typeof childContent === "string") {
+      return childContent;
+    }
+  }
+
+  return undefined;
+}
+
 const shouldShowControls = (
   config: ControlsConfig,
   type: "table" | "code" | "mermaid"
@@ -1098,16 +1114,7 @@ const CodeComponent = ({
     : false;
   const showLineNumbers = !metaNoLineNumbers && contextLineNumbers !== false;
 
-  // Extract code content from children safely
-  let code = "";
-  if (isValidElement(children)) {
-    const childContent = propsOf(children).children;
-    if (typeof childContent === "string") {
-      code = childContent;
-    }
-  } else if (typeof children === "string") {
-    code = children;
-  }
+  const code = getCodeContent(children) ?? "";
 
   if (customRenderer) {
     const CustomComponent = customRenderer.component;
