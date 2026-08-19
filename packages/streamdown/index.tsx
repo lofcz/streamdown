@@ -235,7 +235,8 @@ export type StreamdownProps = Options & {
    * `components`, read `props["data-content"]`, and render arbitrary UI from
    * the data. Requires the tag to also be listed in `allowedTags` (so both the
    * wrapper and its child tags survive sanitization). Do not combine with
-   * `literalTagContent` for the same tag.
+   * `literalTagContent` for the same tag. These tags are excluded from the
+   * custom-tag markdown sandwich so nested child elements stay intact.
    *
    * @example
    * ```tsx
@@ -610,6 +611,17 @@ export const Streamdown = memo(
       [allowedTags]
     );
 
+    // Payload tags must stay a single HTML block so nested child tags survive
+    // as elements for rehypeDataOnlyTags. The blank-line sandwich would
+    // interrupt the block and collapse those children into a paragraph.
+    const markdownContainerTagNames = useMemo(() => {
+      if (!dataOnlyTags?.length) {
+        return allowedTagNames;
+      }
+      const skip = new Set(dataOnlyTags.map((t) => t.toLowerCase()));
+      return allowedTagNames.filter((t) => !skip.has(t.toLowerCase()));
+    }, [allowedTagNames, dataOnlyTags]);
+
     // Track raw (pre-remend) block parses so append-only streams can reuse
     // settled prefix blocks instead of re-lexing the entire document.
     const incrementalParseRef = useRef<IncrementalParseState | null>(null);
@@ -635,9 +647,10 @@ export const Streamdown = memo(
 
       // Normalize multi-line custom tags: blank-line sandwich so nested markdown
       // parses, plus <!----> placeholders for internal blank lines. Runs after
-      // literal escaping so those markers are not corrupted.
-      if (allowedTagNames.length > 0) {
-        result = preprocessCustomTags(result, allowedTagNames);
+      // literal escaping so those markers are not corrupted. dataOnlyTags are
+      // excluded — they carry nested element payload, not prose.
+      if (markdownContainerTagNames.length > 0) {
+        result = preprocessCustomTags(result, markdownContainerTagNames);
       }
 
       // Extract `>>> ... <<<` callouts into single-line placeholder <div>s.
@@ -648,7 +661,7 @@ export const Streamdown = memo(
       result = extractCallouts(result);
 
       return result;
-    }, [children, allowedTagNames, literalTagContent]);
+    }, [children, markdownContainerTagNames, literalTagContent]);
 
     const blocks = useMemo(() => {
       const prev = mode === "streaming" ? incrementalParseRef.current : null;
@@ -873,13 +886,13 @@ export const Streamdown = memo(
       // where a custom tag with multiline content is parsed as an HTML block by
       // CommonMark, which passes inner content through as raw text instead of
       // Markdown. We skip tags listed in literalTagContent (those intentionally
-      // suppress Markdown parsing). Only applied when allowedTags are defined.
-      if (allowedTagNames.length > 0) {
+      // suppress Markdown parsing) and dataOnlyTags (structured payload).
+      if (markdownContainerTagNames.length > 0) {
         result = [
           ...result,
           [
             rehypeMarkdownInCustomTags,
-            allowedTagNames,
+            markdownContainerTagNames,
             literalTagContent ?? [],
           ],
         ];
@@ -908,7 +921,7 @@ export const Streamdown = memo(
       rehypePlugins,
       plugins?.math,
       allowedTags,
-      allowedTagNames,
+      markdownContainerTagNames,
       literalTagContent,
       dataOnlyTags,
       dir,
