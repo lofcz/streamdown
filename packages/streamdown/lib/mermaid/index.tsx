@@ -4,8 +4,35 @@ import { StreamdownContext } from "../../index";
 import { useMermaidPlugin } from "../plugin-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { autoFixMermaidChart } from "./auto-fix";
 import { PanZoom } from "./pan-zoom";
 import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
+
+/**
+ * Render the chart, falling back to a deterministic label-quoting repair
+ * pass (see auto-fix.ts) when the original source fails. The ORIGINAL error
+ * is rethrown when nothing is fixable or the fixed source still fails, so
+ * behaviour for truly broken charts is unchanged.
+ */
+const renderChartWithAutoFix = async (
+  mermaid: { render: (id: string, source: string) => Promise<{ svg: string }> },
+  uniqueId: string,
+  chart: string
+): Promise<{ svg: string }> => {
+  try {
+    return await mermaid.render(uniqueId, chart);
+  } catch (renderError) {
+    const fixedChart = autoFixMermaidChart(chart);
+    if (!fixedChart) {
+      throw renderError;
+    }
+    try {
+      return await mermaid.render(`${uniqueId}-autofix`, fixedChart);
+    } catch {
+      throw renderError;
+    }
+  }
+};
 
 interface MermaidProps {
   chart: string;
@@ -71,7 +98,7 @@ export const Mermaid = ({
         }, 0);
         const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-        const { svg } = await mermaid.render(uniqueId, chart);
+        const { svg } = await renderChartWithAutoFix(mermaid, uniqueId, chart);
         const size = getMermaidSvgSize(svg);
         const normalizedSvg = fullscreen ? svg : normalizeMermaidInlineSvg(svg);
 
