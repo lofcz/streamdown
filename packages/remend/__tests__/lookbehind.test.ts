@@ -18,6 +18,11 @@ const samples: [input: string, expected: string][] = [
   ["```\n20~25\n```", "```\n20~25\n```"],
   ["`20~25`", "`20~25`"],
   ["中~文", "中\\~文"],
+  ["日本~語", "日本\\~語"],
+  ["α~β", "α\\~β"],
+  ["é~x", "é\\~x"],
+  ["𐐀~a", "𐐀\\~a"],
+  ["foo~bar~baz", "foo\\~bar\\~baz"],
 ];
 
 describe("lookbehind detection (#519)", () => {
