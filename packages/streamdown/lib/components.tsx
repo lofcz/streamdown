@@ -48,39 +48,15 @@ const Mermaid = lazy(() =>
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-interface MarkdownPoint {
-  column?: number;
-  line?: number;
-  offset?: number;
-}
-interface MarkdownPosition {
-  end?: MarkdownPoint;
-  start?: MarkdownPoint;
-}
-interface MarkdownNode {
-  position?: MarkdownPosition;
-  properties?: {
-    className?: string;
-    /** Present while the animate plugin is wrapping this node's text. */
-    "data-sd-animated"?: boolean | string | null;
-    metastring?: string;
+type ElementProps = ExtraProps &
+  Record<string, unknown> & {
+    children?: React.ReactNode;
   };
-  tagName?: string;
-}
-
-type ElementProps = Record<string, unknown> & {
-  children?: React.ReactNode;
-  node?: MarkdownNode;
-};
 
 const propsOf = (element: React.ReactElement): ElementProps =>
   element.props as ElementProps;
 
-type WithNode<T> = T & {
-  node?: MarkdownNode;
-  children?: React.ReactNode;
-  className?: string;
-};
+type WithNode<T> = T & ExtraProps;
 
 // Shared comparators
 
@@ -138,8 +114,8 @@ function sameRenderedProps(prev: object, next: object): boolean {
  * part of `node` that has to participate in the comparison.
  */
 function sameCodeMeta(
-  prev?: { properties?: { metastring?: unknown } },
-  next?: { properties?: { metastring?: unknown } }
+  prev?: ExtraProps["node"],
+  next?: ExtraProps["node"]
 ): boolean {
   return prev?.properties?.metastring === next?.properties?.metastring;
 }
