@@ -423,6 +423,7 @@ const countNewWords = (
         if (!(prevLen > 0 && charPos < prevLen)) {
           newWords += 1;
         }
+        charPos += 1;
         return;
       }
       const text = (node as Text).value;
@@ -459,7 +460,9 @@ const processVoidElement = (
     return;
   }
   const prevLen = renderState.prevContentLength;
-  const skipAnimation = prevLen > 0 && charCounter.count < prevLen;
+  const partStart = charCounter.count;
+  charCounter.count += 1;
+  const skipAnimation = prevLen > 0 && partStart < prevLen;
   const delay = skipAnimation
     ? 0
     : schedule.baseDelay + charCounter.newIndex++ * schedule.step;

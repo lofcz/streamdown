@@ -16,11 +16,11 @@ const HELLO_SPAN_RE = />Hello <\/span>/;
 const WORLD_SPAN_RE = />world<\/span>/;
 const I_SPACE_SPAN_RE = />i <\/span>/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
-const DELAY_RE = /--sd-delay:(\d+)ms/g;
 const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
 const IMG_TAG_RE = /<img[^>]*>/;
 const HR_TAG_RE = /<hr[^>]*>/;
+const DELAY_RE = /--sd-delay:(\d+)ms/g;
 
 const delaysOf = (html: string): number[] =>
   Array.from(html.matchAll(DELAY_RE), (match) => Number.parseInt(match[1], 10));
@@ -692,6 +692,16 @@ describe("animate plugin", () => {
       const result = await processHtml("<p>Hello</p><hr/><p>World</p>", plugin);
       expect(result).toContain("--sd-delay:50ms");
       expect(result).toContain("--sd-delay:100ms");
+    });
+
+    it("should not re-animate a trailing void on the next stream tick", async () => {
+      const plugin = createAnimatePlugin();
+      await processHtml("<p>Hello</p><hr/>", plugin);
+      plugin.commit();
+
+      const result = await processHtml("<p>Hello</p><hr/>", plugin);
+      const hr = result.match(HR_TAG_RE)?.[0] ?? "";
+      expect(hr).toContain("--sd-duration:0ms");
     });
   });
 });

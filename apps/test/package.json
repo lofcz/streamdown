@@ -10,7 +10,7 @@
   "dependencies": {
     "@ai-sdk/gateway": "^2.0.20",
     "@ai-sdk/react": "^2.0.113",
-    "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@radix-ui/react-use-controllable-state": "^1.2.6",
     "@streamdown/cjk": "workspace:@lofcz/streamdown-cjk@*",
     "@streamdown/code": "workspace:@lofcz/streamdown-code@*",
     "@streamdown/math": "workspace:@lofcz/streamdown-math@*",
@@ -20,7 +20,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "lucide-react": "^0.560.0",
-    "next": "^16.1.5",
+    "next": "^16.3.1",
     "overlayscrollbars": "^2.16.0",
     "overlayscrollbars-react": "^0.5.6",
     "radix-ui": "latest",
@@ -30,13 +30,13 @@
     "rehype-harden": "^1.1.8",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
-    "remark-cjk-friendly": "^2.0.1",
-    "remark-cjk-friendly-gfm-strikethrough": "^2.0.1",
+    "remark-cjk-friendly": "^2.3.1",
+    "remark-cjk-friendly-gfm-strikethrough": "^2.3.1",
     "remark-gfm": "npm:@lofcz/remark-gfm@^4.0.1",
     "remark-math": "^6.0.0",
     "streamdown": "workspace:@lofcz/streamdown@*",
-    "tailwind-merge": "^3.4.0",
-    "zod": "^4.1.13"
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

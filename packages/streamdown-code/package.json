@@ -26,10 +26,10 @@
     "shiki": "^3.19.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/coverage-v8": "^4.1.10",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
-    "vitest": "^4.0.15"
+    "vitest": "^4.1.10"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
   "license": "Apache-2.0",
