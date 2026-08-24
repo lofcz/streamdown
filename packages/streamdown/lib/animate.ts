@@ -172,7 +172,11 @@ export interface AnimateOptions {
 
 const WHITESPACE_RE = /\s/;
 const WHITESPACE_ONLY_RE = /^\s+$/;
-const SKIP_TAGS = new Set(["code", "pre", "svg", "math", "annotation"]);
+// Skip layout-sensitive subtrees. Fenced/highlighted blocks are protected via
+// `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
+// animate — word spans inherit styles the same way surrounding prose does (#594).
+const SKIP_TAGS = new Set(["pre", "svg", "math", "annotation"]);
+// `animateCodeBlocks` also wraps text inside fenced `pre > code`.
 const SKIP_TAGS_WITHOUT_CODE = new Set(["svg", "math", "annotation"]);
 const VOID_ANIMATE_TAGS = new Set(["img", "hr"]);
 const LIST_CONTAINER_TAGS = new Set(["ul", "ol", "li"]);

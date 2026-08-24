@@ -9,6 +9,9 @@ import {
 import type { PluggableList } from "unified";
 import type { Components } from "./markdown";
 import type { MermaidConfig, ThemeInput } from "./plugin-types";
+import type { CSVSeparator } from "./table/utils";
+
+export type DownloadControlConfig = boolean | { filename: string };
 
 export type ControlsConfig =
   | boolean
@@ -17,19 +20,20 @@ export type ControlsConfig =
         | boolean
         | {
             copy?: boolean;
-            download?: boolean;
+            csvSeparator?: CSVSeparator;
+            download?: DownloadControlConfig;
             fullscreen?: boolean;
           };
       code?:
         | boolean
         | {
             copy?: boolean;
-            download?: boolean;
+            download?: DownloadControlConfig;
           };
       mermaid?:
         | boolean
         | {
-            download?: boolean;
+            download?: DownloadControlConfig;
             copy?: boolean;
             fullscreen?: boolean;
             panZoom?: boolean;
