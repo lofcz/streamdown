@@ -1,5 +1,25 @@
 # streamdown
 
+## 2.11.0
+
+### Minor Changes
+
+- b734cbf: - Add custom download filenames for code, table, and mermaid via the `controls` prop
+  - Configure downloads with `download: { filename: "customName" }` while keeping boolean `true`/`false` to show or hide
+  - Preserve automatic file-extension mapping based on language or export format
+  - Remove the `codeDownload` prop in favor of the unified `controls` API
+- 4436b56: - Add `controls.table.csvSeparator` (`"," | ";" | "\t" | "auto"`) for table copy and download CSV
+  - Reuse `tableDataToCSV` separator handling, including locale-aware `"auto"` mode
+  - Improve CSV escaping to respect the selected separator for Excel compatibility
+
+### Patch Changes
+
+- 6ec3c48: fix(animate): animate inline code during streaming
+
+  Skip the animate visitor on `pre` (and svg/math/annotation) only — not bare `code`. Fenced/highlighted blocks stay un-split via their `pre` ancestor; inline backtick spans now get the same per-word fade-in as surrounding prose.
+
+  Fixes #594
+
 ## 2.10.5
 
 ### Patch Changes
