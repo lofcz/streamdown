@@ -58,6 +58,7 @@ import {
   type LinkSafetyConfig,
   type ListStylePreset,
   type MermaidOptions,
+  type PortalTarget,
   type ScrollableComponent,
   StreamdownContext,
   type StreamdownContextType,
@@ -117,6 +118,7 @@ export type {
   LinkSafetyModalProps,
   MermaidErrorComponentProps,
   MermaidOptions,
+  PortalTarget,
   ScrollableComponent,
   ScrollableProps,
   StreamdownContextType,
@@ -211,6 +213,11 @@ export type StreamdownProps = Options & {
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
+  /**
+   * DOM node for Streamdown overlays, or a function returning one.
+   * Defaults to `document.body`.
+   */
+  portal?: PortalTarget;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
   /**
@@ -558,6 +565,7 @@ export const Streamdown = memo(
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
+    portal,
     lineNumbers = true,
     allowedTags,
     literalTagContent,
@@ -945,6 +953,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
         scrollable,
         tableMaxHeight,
         components: mergedComponents,
@@ -963,6 +972,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
         scrollable,
         plugins?.code,
         tableMaxHeight,

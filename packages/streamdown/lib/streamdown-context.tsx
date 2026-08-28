@@ -109,6 +109,9 @@ export type ScrollableProps = ComponentProps<"div"> & {
  */
 export type ScrollableComponent = ComponentType<ScrollableProps>;
 
+/** DOM node for Streamdown overlays, or a function returning one. Defaults to `document.body`. */
+export type PortalTarget = HTMLElement | null | (() => HTMLElement | null);
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
   /** Icon resolver for custom callouts (`>>> (icon)[Title]{color}`). */
@@ -128,6 +131,8 @@ export interface StreamdownContextType {
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  /** Overlay portal target for fullscreen and the built-in link safety modal. */
+  portal?: PortalTarget;
   rehypePlugins?: PluggableList;
   remarkPlugins?: PluggableList;
   /** Component used for horizontal-scroll regions (code body, table). @default plain div */
@@ -156,6 +161,7 @@ export const defaultStreamdownContext: StreamdownContextType = {
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
+  portal: undefined,
   tableMaxHeight: 300,
 };
 
