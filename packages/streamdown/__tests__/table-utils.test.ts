@@ -3,10 +3,12 @@ import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
   getTableCsvSeparator,
+  reactChildrenToText,
   type TableData,
   tableDataToCSV,
   tableDataToMarkdown,
   tableDataToTSV,
+  tableHeaderLabel,
 } from "../lib/table/utils";
 
 describe("Table Utils", () => {
@@ -578,6 +580,35 @@ describe("Table Utils", () => {
       expect(result).toBe(
         "| Description |\n| --- |\n| Paragraph one.<br>Paragraph two. |"
       );
+    });
+  });
+
+  describe("reactChildrenToText", () => {
+    it("flattens nested text and skips booleans", () => {
+      expect(reactChildrenToText(["Mezi", false, ["předmětové ", 1]])).toBe(
+        "Mezipředmětové 1"
+      );
+    });
+  });
+
+  describe("tableHeaderLabel", () => {
+    it("uses an explicit title even when empty", () => {
+      expect(tableHeaderLabel("Header", undefined, "")).toBe("");
+      expect(tableHeaderLabel("Header", undefined, "Full")).toBe("Full");
+    });
+
+    it("collapses whitespace from children when no title is given", () => {
+      expect(tableHeaderLabel("  Téma   a učivo  ")).toBe("Téma a učivo");
+    });
+
+    it("reads text from a hast node when present", () => {
+      const node = {
+        type: "element",
+        tagName: "th",
+        properties: {},
+        children: [{ type: "text", value: "Očekávané výstupy" }],
+      } as const;
+      expect(tableHeaderLabel("ignored", node)).toBe("Očekávané výstupy");
     });
   });
 });

@@ -36,6 +36,7 @@ import {
   StreamdownContext,
 } from "./streamdown-context";
 import { Table } from "./table";
+import { tableHeaderLabel } from "./table/utils";
 import { useTranslations } from "./translations-context";
 
 const START_LINE_PATTERN = /startLine=(\d+)/;
@@ -667,18 +668,20 @@ MemoTr.displayName = "MarkdownTr";
 
 type ThProps = WithNode<JSX.IntrinsicElements["th"]>;
 const MemoTh = memo<ThProps>(
-  ({ children, className, node, ...props }: ThProps) => {
+  ({ children, className, node, title, ...props }: ThProps) => {
     const cn = useCn();
+    const label = tableHeaderLabel(children, node, title);
     return (
       <th
         className={cn(
-          "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
+          "min-w-0 overflow-hidden px-4 py-2 text-left font-semibold text-sm",
           className
         )}
         data-streamdown="table-header-cell"
         {...props}
+        title={label}
       >
-        {children}
+        <span className={cn("wrap-anywhere line-clamp-2")}>{children}</span>
       </th>
     );
   },
@@ -692,7 +695,7 @@ const MemoTd = memo<TdProps>(
     const cn = useCn();
     return (
       <td
-        className={cn("px-4 py-2 text-sm", className)}
+        className={cn("wrap-anywhere min-w-0 px-4 py-2 text-sm", className)}
         data-streamdown="table-cell"
         {...props}
       >

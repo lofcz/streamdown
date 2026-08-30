@@ -521,12 +521,33 @@ describe("Markdown Components", () => {
       const { container } = render(<TH node={null as any}>Header</TH>);
       const th = container.querySelector("th");
       expect(th).toBeTruthy();
-      expect(th?.className).toContain("whitespace-nowrap");
+      expect(th?.className).toContain("min-w-0");
+      expect(th?.className).toContain("overflow-hidden");
       expect(th?.className).toContain("px-4");
       expect(th?.className).toContain("py-2");
       expect(th?.className).toContain("text-left");
       expect(th?.className).toContain("font-semibold");
       expect(th?.className).toContain("text-sm");
+      expect(th?.className).not.toContain("whitespace-nowrap");
+      expect(th?.getAttribute("title")).toBe("Header");
+      const clamp = th?.querySelector("span");
+      expect(clamp?.className).toContain("line-clamp-2");
+      expect(clamp?.className).toContain("wrap-anywhere");
+    });
+
+    it("should keep an explicit title on th", () => {
+      const TH = components.th;
+      if (!TH) {
+        return;
+      }
+      const { container } = render(
+        <TH node={null as any} title="Full heading">
+          Short
+        </TH>
+      );
+      expect(container.querySelector("th")?.getAttribute("title")).toBe(
+        "Full heading"
+      );
     });
 
     it("should render td with correct classes", () => {
@@ -537,9 +558,11 @@ describe("Markdown Components", () => {
       const { container } = render(<TD node={null as any}>Cell</TD>);
       const td = container.querySelector("td");
       expect(td).toBeTruthy();
+      expect(td?.className).toContain("min-w-0");
       expect(td?.className).toContain("px-4");
       expect(td?.className).toContain("py-2");
       expect(td?.className).toContain("text-sm");
+      expect(td?.className).toContain("wrap-anywhere");
     });
   });
 
