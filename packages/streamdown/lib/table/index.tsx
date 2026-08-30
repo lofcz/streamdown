@@ -72,11 +72,10 @@ export const Table = ({
         <table
           className={cn(
             // table-fixed keeps column widths stable while streaming (no
-            // reflow as rows arrive). w-full + min-w-max means: narrow tables
-            // still fill the row, but when nowrap header/body content is wider
-            // than the container the table grows to fit it and the scroll
-            // region scrolls — instead of squeezing columns until they overlap.
-            "w-full min-w-max table-fixed divide-y divide-border",
+            // reflow as rows arrive). Headers wrap + clamp instead of nowrap
+            // overflow, so long labels cannot paint over neighboring cells.
+            // The scroll region still handles wide body content.
+            "w-full table-fixed divide-y divide-border",
             className
           )}
           data-streamdown="table"

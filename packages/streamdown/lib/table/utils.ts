@@ -1,7 +1,47 @@
+import type { Element } from "hast";
+import { toText } from "hast-util-to-text";
+import { isValidElement, type ReactNode } from "react";
+
 export interface TableData {
   headers: string[];
   rows: string[][];
 }
+
+/** Flatten React children to a single line of visible text. */
+export const reactChildrenToText = (children: ReactNode): string => {
+  if (children == null || typeof children === "boolean") {
+    return "";
+  }
+  if (typeof children === "string" || typeof children === "number") {
+    return String(children);
+  }
+  if (Array.isArray(children)) {
+    return children.map(reactChildrenToText).join("");
+  }
+  if (isValidElement(children)) {
+    return reactChildrenToText(
+      (children.props as { children?: ReactNode }).children
+    );
+  }
+  return "";
+};
+
+/**
+ * Native `title` for a table header: honor an explicit prop, otherwise the
+ * cell's plain text so clamped / wrapped headers stay readable on hover.
+ */
+export const tableHeaderLabel = (
+  children: ReactNode,
+  node?: Element,
+  title?: string
+): string | undefined => {
+  if (title != null) {
+    return title;
+  }
+  const raw = node ? toText(node) : reactChildrenToText(children);
+  const label = raw.replace(/\s+/g, " ").trim();
+  return label || undefined;
+};
 
 function extractCellText(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
