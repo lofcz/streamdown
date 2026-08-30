@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 2.0.0
+
+### Major Changes
+
+- 59a8682: Upgrade Shiki to v4. Node.js 20 or newer is now required when using `@lofcz/streamdown-code`.
+
 ## 1.1.1
 
 ### Patch Changes
