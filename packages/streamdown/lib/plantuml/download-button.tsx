@@ -2,10 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
-import {
-  serializeSvgForDownload,
-  svgToPngBlob,
-} from "../mermaid/utils";
+import { serializeSvgForDownload, svgToPngBlob } from "../mermaid/utils";
 import { usePlantUmlPlugin } from "../plugin-context";
 import type { PlantUmlConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";

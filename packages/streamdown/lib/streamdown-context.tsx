@@ -149,8 +149,8 @@ export interface StreamdownContextType {
   /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
-  plantuml?: PlantUmlOptions;
   mode: "static" | "streaming";
+  plantuml?: PlantUmlOptions;
   /** Overlay portal target for fullscreen and the built-in link safety modal. */
   portal?: PortalTarget;
   rehypePlugins?: PluggableList;

@@ -3,8 +3,8 @@ import {
   createPlantUmlPlugin,
   isPlantUmlLanguage,
   normalizePlantUmlSource,
-  plantuml,
   PLANTUML_LANGUAGES,
+  plantuml,
 } from "../index";
 
 describe("plantuml plugin", () => {

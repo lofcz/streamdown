@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 /**
  * Attach GitHub trusted publishing (OIDC) for every public workspace package
  * that already exists on npm. Same ritual as the other @lofcz monorepos.
@@ -12,21 +13,23 @@
  */
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "lofcz/streamdown-ng";
 const WORKFLOW_FILE = "release.yml";
+const GITHUB_RE = /github/i;
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const onlyIndex = args.indexOf("--only");
 const only = onlyIndex === -1 ? null : args[onlyIndex + 1];
 
 function npmEnv() {
-  const env = { ...process.env };
-  delete env.NPM_TOKEN;
-  delete env.NODE_AUTH_TOKEN;
+  const {
+    NPM_TOKEN: _npmToken,
+    NODE_AUTH_TOKEN: _nodeAuthToken,
+    ...env
+  } = process.env;
   return env;
 }
 
@@ -71,14 +74,18 @@ function hasDesiredTrust(name) {
   if (result.status !== 0 && !raw.trim()) {
     return false;
   }
-  return raw.includes(REPO) && (raw.includes(WORKFLOW_FILE) || /github/i.test(raw));
+  return (
+    raw.includes(REPO) && (raw.includes(WORKFLOW_FILE) || GITHUB_RE.test(raw))
+  );
 }
 
 if (process.env.NPM_TOKEN || process.env.NODE_AUTH_TOKEN) {
-  console.error("NPM_TOKEN / NODE_AUTH_TOKEN is set. Clear them and use interactive npm login.");
+  console.error(
+    "NPM_TOKEN / NODE_AUTH_TOKEN is set. Clear them and use interactive npm login."
+  );
   process.exit(1);
 }
-if (!process.stdin.isTTY && !dryRun) {
+if (!(process.stdin.isTTY || dryRun)) {
   console.error("Run from an interactive terminal so npm can complete 2FA.");
   process.exit(1);
 }
@@ -89,7 +96,9 @@ if (only && names.length === 0) {
   process.exit(1);
 }
 
-console.log(`Configuring GitHub trusted publisher for ${names.length} package(s)`);
+console.log(
+  `Configuring GitHub trusted publisher for ${names.length} package(s)`
+);
 console.log(`  repo:     ${REPO}`);
 console.log(`  workflow: .github/workflows/${WORKFLOW_FILE}`);
 console.log(`  dry-run:  ${dryRun}`);
@@ -101,7 +110,9 @@ const failed = [];
 
 for (const name of names) {
   if (!packageExists(name)) {
-    skipped.push(`${name} (not on npm yet — run pnpm bootstrap:package ${name})`);
+    skipped.push(
+      `${name} (not on npm yet — run pnpm bootstrap:package ${name})`
+    );
     console.log(`↩ skip (not on registry): ${name}`);
     continue;
   }

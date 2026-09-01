@@ -71,7 +71,8 @@ export const PlantUml = ({
         setIsLoading(true);
 
         const instance = plantumlPlugin.getPlantUml(config);
-        const dark = config?.dark ?? plantumlContext?.config?.dark ?? prefersDark();
+        const dark =
+          config?.dark ?? plantumlContext?.config?.dark ?? prefersDark();
         const { svg } = await instance.render(chart, { dark });
         const size = getMermaidSvgSize(svg);
         const normalizedSvg = fullscreen ? svg : normalizeMermaidInlineSvg(svg);

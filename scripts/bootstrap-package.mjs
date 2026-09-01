@@ -31,18 +31,24 @@ const CANONICAL_REPO_URL = `git+https://github.com/${CANONICAL_REPO}.git`;
 const WORKFLOW_FILE = "release.yml";
 const STUB_VERSION = "0.0.0-bootstrap.0";
 const STUB_TAG = "bootstrap";
+const NEWLINE = /\r?\n/;
+const GITHUB_RE = /github/i;
 
 function fail(lines) {
   console.error(
-    ["✖ bootstrap aborted (scripts/bootstrap-package.mjs):", ...lines].join("\n")
+    ["✖ bootstrap aborted (scripts/bootstrap-package.mjs):", ...lines].join(
+      "\n"
+    )
   );
   process.exit(1);
 }
 
 function npmEnv() {
-  const env = { ...process.env };
-  delete env.NPM_TOKEN;
-  delete env.NODE_AUTH_TOKEN;
+  const {
+    NPM_TOKEN: _npmToken,
+    NODE_AUTH_TOKEN: _nodeAuthToken,
+    ...env
+  } = process.env;
   return env;
 }
 
@@ -52,7 +58,11 @@ function whoami(cwd) {
     encoding: "utf8",
     env: npmEnv(),
   });
-  const name = (result.stdout || "").trim().split(/\r?\n/).filter(Boolean).pop();
+  const name = (result.stdout || "")
+    .trim()
+    .split(NEWLINE)
+    .filter(Boolean)
+    .pop();
   return result.status === 0 && name ? name : "";
 }
 
@@ -160,10 +170,10 @@ if (view.status === 0) {
   console.log(
     `✔ ${manifest.name} already exists on the registry — skipping claim stub.`
   );
-  if (!skipTrust) {
-    await attachTrust(manifest.name);
-  } else {
+  if (skipTrust) {
     printTrustCommand(manifest.name);
+  } else {
+    attachTrust(manifest.name);
   }
   process.exit(0);
 }
@@ -177,7 +187,7 @@ if (!missing) {
   ]);
 }
 
-if (!process.stdin.isTTY && !dryRun) {
+if (!(process.stdin.isTTY || dryRun)) {
   fail(["  run from an interactive terminal so npm login / 2FA can prompt."]);
 }
 
@@ -196,7 +206,9 @@ The stub is built in ${workDir}
 
 if (!dryRun) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = (await rl.question("Type yes to continue: ")).trim().toLowerCase();
+  const answer = (await rl.question("Type yes to continue: "))
+    .trim()
+    .toLowerCase();
   rl.close();
   if (answer !== "yes") {
     fail(["  aborted."]);
@@ -210,7 +222,10 @@ const stub = {
   license: manifest.license ?? "Apache-2.0",
   repository,
 };
-writeFileSync(path.join(workDir, "package.json"), `${JSON.stringify(stub, null, 2)}\n`);
+writeFileSync(
+  path.join(workDir, "package.json"),
+  `${JSON.stringify(stub, null, 2)}\n`
+);
 writeFileSync(
   path.join(workDir, "README.md"),
   [
@@ -249,7 +264,9 @@ if (publish.status !== 0) {
   ]);
 }
 
-console.log(`✔ ${dryRun ? "dry-run complete for" : "claimed"} ${manifest.name}`);
+console.log(
+  `✔ ${dryRun ? "dry-run complete for" : "claimed"} ${manifest.name}`
+);
 
 if (skipTrust) {
   printTrustCommand(manifest.name);
@@ -257,7 +274,7 @@ if (skipTrust) {
   console.log("\n[--dry-run] would now attach the trusted publisher.");
   printTrustCommand(manifest.name);
 } else {
-  await attachTrust(manifest.name);
+  attachTrust(manifest.name);
 }
 
 console.log(
@@ -286,7 +303,7 @@ function printTrustCommand(name) {
   );
 }
 
-async function attachTrust(name) {
+function attachTrust(name) {
   const list = spawnSync("npm", ["trust", "list", name, "--json"], {
     encoding: "utf8",
     env: npmEnv(),
@@ -294,7 +311,7 @@ async function attachTrust(name) {
   const raw = `${list.stdout || ""}\n${list.stderr || ""}`;
   if (
     raw.includes(CANONICAL_REPO) &&
-    (raw.includes(WORKFLOW_FILE) || /github/i.test(raw))
+    (raw.includes(WORKFLOW_FILE) || GITHUB_RE.test(raw))
   ) {
     console.log(`✔ trusted publisher already attached for ${name}`);
     return;

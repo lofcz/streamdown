@@ -27,6 +27,7 @@ export interface PlantUmlPluginOptions {
 }
 
 const START_DIRECTIVE = /^@start\w+/im;
+const LINE_SPLIT = /\r\n|\r|\n/;
 
 /**
  * Ensure the source has a PlantUML `@start…` / `@end…` pair. Agents often
@@ -76,7 +77,8 @@ function loadScript(src: string): Promise<void> {
       existing.addEventListener("load", () => resolve(), { once: true });
       existing.addEventListener(
         "error",
-        () => reject(new Error("Failed to load PlantUML Graphviz (viz-global.js)")),
+        () =>
+          reject(new Error("Failed to load PlantUML Graphviz (viz-global.js)")),
         { once: true }
       );
       return;
@@ -99,7 +101,7 @@ async function ensureViz(): Promise<void> {
     return;
   }
   if (vizReady) {
-    return vizReady;
+    return await vizReady;
   }
 
   vizReady = (async () => {
@@ -134,7 +136,7 @@ async function ensureViz(): Promise<void> {
     throw error;
   });
 
-  return vizReady;
+  return await vizReady;
 }
 
 async function loadEngine(): Promise<
@@ -144,11 +146,11 @@ async function loadEngine(): Promise<
     /* webpackChunkName: "plantuml-engine" */
     "@plantuml/core/plantuml.js"
   );
-  return enginePromise;
+  return await enginePromise;
 }
 
 function renderViaDom(
-  render: (typeof import("@plantuml/core/plantuml.js"))["render"],
+  render: typeof import("@plantuml/core/plantuml.js")["render"],
   lines: string[],
   dark: boolean
 ): Promise<string> {
@@ -200,7 +202,7 @@ function renderViaDom(
 }
 
 function renderViaString(
-  renderToString: (typeof import("@plantuml/core/plantuml.js"))["renderToString"],
+  renderToString: typeof import("@plantuml/core/plantuml.js")["renderToString"],
   lines: string[]
 ): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -218,7 +220,7 @@ async function renderPlantUml(
   if (!normalized) {
     throw new Error("Empty PlantUML source");
   }
-  const lines = normalized.split(/\r\n|\r|\n/);
+  const lines = normalized.split(LINE_SPLIT);
   const dark = options.dark === true;
 
   const svg = await enqueue(async () => {

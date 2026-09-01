@@ -434,7 +434,11 @@ describe("Markdown Components", () => {
         throw new Error("Code component not found");
       }
       const { container } = render(
-        <Code className="language-plantuml" data-block="true" node={null as any}>
+        <Code
+          className="language-plantuml"
+          data-block="true"
+          node={null as any}
+        >
           {"Alice -> Bob : hello"}
         </Code>
       );
@@ -476,11 +480,7 @@ describe("Markdown Components", () => {
 
       const { container } = render(
         <PluginContext.Provider value={{ plantuml: mockPlantUmlPlugin }}>
-          <Code
-            className="language-puml"
-            data-block="true"
-            node={null as any}
-          >
+          <Code className="language-puml" data-block="true" node={null as any}>
             {"Alice -> Bob : hello"}
           </Code>
         </PluginContext.Provider>

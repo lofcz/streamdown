@@ -38,11 +38,11 @@ export interface StreamdownTranslations {
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
   mermaidFormatSvg: string;
-  plantumlFormatPuml: string;
-  plantumlFormatPng: string;
-  plantumlFormatSvg: string;
   openExternalLink: string;
   openLink: string;
+  plantumlFormatPng: string;
+  plantumlFormatPuml: string;
+  plantumlFormatSvg: string;
   resetView: string;
   tableFormatCsv: string;
   tableFormatMarkdown: string;
