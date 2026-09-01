@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.12.0
+
+### Minor Changes
+
+- 9889a5b: Add first-class PlantUML diagrams. Fenced `plantuml` / `puml` blocks render via `@lofcz/streamdown-plantuml`, which lazy-loads the official `@plantuml/core` TeaVM engine. Controls (copy, download SVG/PNG/PUML, fullscreen, pan-zoom) match Mermaid.
+
 ## 2.11.2
 
 ### Patch Changes
