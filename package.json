@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:packages": "pnpm build --filter @lofcz/streamdown --filter @lofcz/streamdown-math --filter @lofcz/streamdown-code --filter @lofcz/streamdown-cjk --filter @lofcz/streamdown-mermaid --filter @lofcz/remend",
+    "build:packages": "pnpm build --filter @lofcz/streamdown --filter @lofcz/streamdown-math --filter @lofcz/streamdown-code --filter @lofcz/streamdown-cjk --filter @lofcz/streamdown-mermaid --filter @lofcz/streamdown-plantuml --filter @lofcz/remend",
     "dev": "turbo run dev",
     "check": "ultracite check",
     "fix": "ultracite fix",
@@ -15,6 +15,8 @@
     "changeset:version": "changeset version",
     "changeset:publish": "pnpm build && pnpm release:publish",
     "release:publish": "node scripts/skip-published-packages.mjs && changeset publish",
+    "bootstrap:package": "node scripts/bootstrap-package.mjs",
+    "trust:packages": "node scripts/setup-trusted-publishing.mjs",
     "bench": "turbo run bench",
     "bench:ui": "turbo run bench:ui",
     "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i"

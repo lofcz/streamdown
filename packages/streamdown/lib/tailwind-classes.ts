@@ -1,7 +1,7 @@
 /**
  * Complete list of Tailwind CSS utility classes used by streamdown and its
  * official plugins (@streamdown/code, @streamdown/math, @streamdown/mermaid,
- * @streamdown/cjk).
+ * @streamdown/plantuml, @streamdown/cjk).
  *
  * Use this list to configure Tailwind v4's `@source inline()` directive when
  * you need a custom prefix.  See the README for details.

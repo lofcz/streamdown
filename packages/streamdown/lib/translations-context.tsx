@@ -24,6 +24,7 @@ export interface StreamdownTranslations {
   downloadDiagram: string;
   downloadDiagramAsMmd: string;
   downloadDiagramAsPng: string;
+  downloadDiagramAsPuml: string;
   downloadDiagramAsSvg: string;
   downloadFile: string;
   // Image
@@ -37,6 +38,9 @@ export interface StreamdownTranslations {
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
   mermaidFormatSvg: string;
+  plantumlFormatPuml: string;
+  plantumlFormatPng: string;
+  plantumlFormatSvg: string;
   openExternalLink: string;
   openLink: string;
   resetView: string;
@@ -63,11 +67,15 @@ export const defaultTranslations: StreamdownTranslations = {
   downloadDiagramAsSvg: "Download diagram as SVG",
   downloadDiagramAsPng: "Download diagram as PNG",
   downloadDiagramAsMmd: "Download diagram as MMD",
+  downloadDiagramAsPuml: "Download diagram as PlantUML",
   viewFullscreen: "View fullscreen",
   exitFullscreen: "Exit fullscreen",
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",
+  plantumlFormatSvg: "SVG",
+  plantumlFormatPng: "PNG",
+  plantumlFormatPuml: "PUML",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   resetView: "Reset zoom and pan",

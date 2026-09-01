@@ -36,6 +36,10 @@ describe("defaultTranslations", () => {
     expect(defaultTranslations.mermaidFormatSvg).toBe("SVG");
     expect(defaultTranslations.mermaidFormatPng).toBe("PNG");
     expect(defaultTranslations.mermaidFormatMmd).toBe("MMD");
+    expect(defaultTranslations.downloadDiagramAsPuml).toBe(
+      "Download diagram as PlantUML"
+    );
+    expect(defaultTranslations.plantumlFormatPuml).toBe("PUML");
     expect(defaultTranslations.copyTable).toBe("Copy table");
     expect(defaultTranslations.copyTableAsMarkdown).toBe(
       "Copy table as Markdown"

@@ -1,0 +1,62 @@
+---
+title: "@streamdown/plantuml"
+description: Render PlantUML diagrams including sequence, class, activity, and mind maps.
+type: reference
+summary: Client-side PlantUML rendering via @plantuml/core, with the same interactive controls as Mermaid.
+prerequisites:
+  - /docs/plugins
+related:
+  - /docs/code-blocks
+  - /docs/plugins/mermaid
+---
+
+The `@streamdown/plantuml` plugin renders [PlantUML](https://plantuml.com/) diagrams in the browser using the official TeaVM engine (`@plantuml/core`). The engine is loaded only when a `plantuml` or `puml` fence is actually rendered.
+
+- Interactive controls (fullscreen, download, copy)
+- Dark-mode rendering when the page is in dark theme
+- Custom error handling with retry
+
+## Install
+
+```package-install
+npm install @streamdown/plantuml
+```
+
+## Usage
+
+```tsx title="chat.tsx" lineNumbers
+import { plantuml } from '@streamdown/plantuml';
+
+<Streamdown plugins={{ plantuml }}>
+  {markdown}
+</Streamdown>
+```
+
+Without the plugin, PlantUML code blocks render as plain code.
+
+## Language identifiers
+
+````markdown
+```plantuml
+@startuml
+Alice -> Bob : hello
+@enduml
+```
+````
+
+`puml` is accepted as an alias of `plantuml`.
+
+If `@startuml` / `@startmindmap` / other `@start…` directives are omitted, the plugin wraps the body in `@startuml` / `@enduml`.
+
+## Error handling
+
+Pass `errorComponent` on the `plantuml` prop (same shape as Mermaid) to replace the default error box:
+
+```tsx
+<Streamdown
+  plugins={{ plantuml }}
+  plantuml={{ errorComponent: MyPlantUmlError }}
+>
+  {markdown}
+</Streamdown>
+```

@@ -8,6 +8,7 @@ import {
   useCustomRenderer,
   useMathPlugin,
   useMermaidPlugin,
+  usePlantUmlPlugin,
   usePlugins,
 } from "../lib/plugin-context";
 
@@ -64,6 +65,23 @@ describe("plugin-context hooks", () => {
         wrapper: wrapper({ mermaid: mermaidPlugin }),
       });
       expect(result.current).toBe(mermaidPlugin);
+    });
+  });
+
+  describe("usePlantUmlPlugin", () => {
+    it("should return null when no plugins", () => {
+      const { result } = renderHook(() => usePlantUmlPlugin(), {
+        wrapper: wrapper(null),
+      });
+      expect(result.current).toBeNull();
+    });
+
+    it("should return plantuml plugin when available", () => {
+      const plantumlPlugin = { name: "plantuml" };
+      const { result } = renderHook(() => usePlantUmlPlugin(), {
+        wrapper: wrapper({ plantuml: plantumlPlugin }),
+      });
+      expect(result.current).toBe(plantumlPlugin);
     });
   });
 

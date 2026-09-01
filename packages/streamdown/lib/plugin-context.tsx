@@ -30,6 +30,14 @@ export const useMermaidPlugin = () => {
 };
 
 /**
+ * Hook to access the PlantUML plugin
+ */
+export const usePlantUmlPlugin = () => {
+  const plugins = usePlugins();
+  return plugins?.plantuml ?? null;
+};
+
+/**
  * Hook to access the math plugin
  */
 export const useMathPlugin = () => {

@@ -427,6 +427,71 @@ describe("Markdown Components", () => {
       expect(mermaidBlock?.className).toContain("rounded-xl");
       expect(mermaidBlock?.className).toContain("border");
     });
+
+    it("should render plantuml code as regular code block when plugin not provided", async () => {
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
+      const { container } = render(
+        <Code className="language-plantuml" data-block="true" node={null as any}>
+          {"Alice -> Bob : hello"}
+        </Code>
+      );
+
+      await waitFor(() => {
+        const codeBlock = container.querySelector(
+          '[data-streamdown="code-block"]'
+        );
+        expect(codeBlock).toBeTruthy();
+      });
+
+      expect(
+        container
+          .querySelector('[data-streamdown="code-block"]')
+          ?.getAttribute("data-language")
+      ).toBe("plantuml");
+      expect(
+        container.querySelector('[data-streamdown="plantuml-block"]')
+      ).toBeNull();
+    });
+
+    it("should render plantuml block when plugin is provided", async () => {
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
+
+      const { PluginContext } = await import("../lib/plugin-context");
+      const { vi } = await import("vitest");
+
+      const mockPlantUmlPlugin = {
+        name: "plantuml" as const,
+        type: "diagram" as const,
+        language: ["plantuml", "puml"],
+        getPlantUml: vi.fn().mockReturnValue({
+          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+        }),
+      };
+
+      const { container } = render(
+        <PluginContext.Provider value={{ plantuml: mockPlantUmlPlugin }}>
+          <Code
+            className="language-puml"
+            data-block="true"
+            node={null as any}
+          >
+            {"Alice -> Bob : hello"}
+          </Code>
+        </PluginContext.Provider>
+      );
+
+      await waitFor(() => {
+        expect(
+          container.querySelector('[data-streamdown="plantuml-block"]')
+        ).toBeTruthy();
+      });
+    });
   });
 
   describe("Table Components", () => {

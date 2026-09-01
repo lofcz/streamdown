@@ -26,7 +26,14 @@ import type { ExtraProps, Options } from "./markdown";
 import { Markdown } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
-import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
+import { PlantUmlDownloadDropdown } from "./plantuml/download-button";
+import { PlantUmlFullscreenButton } from "./plantuml/fullscreen-button";
+import {
+  useCustomRenderer,
+  useMermaidPlugin,
+  usePlantUmlPlugin,
+} from "./plugin-context";
+import type { PlantUmlPlugin } from "./plugin-types";
 import { useCn } from "./prefix-context";
 // BundledLanguage type removed - we now support any language string
 import {
@@ -45,6 +52,10 @@ const NO_LINE_NUMBERS_PATTERN = /\bnoLineNumbers\b/;
 // Lazy load heavy components
 const Mermaid = lazy(() =>
   import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
+);
+
+const PlantUml = lazy(() =>
+  import("./plantuml").then((mod) => ({ default: mod.PlantUml }))
 );
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -137,9 +148,23 @@ function getCodeContent(children: React.ReactNode): string | undefined {
   return undefined;
 }
 
+const matchesPluginLanguage = (
+  language: string,
+  pluginLanguage: string | readonly string[]
+): boolean =>
+  Array.isArray(pluginLanguage)
+    ? pluginLanguage.includes(language)
+    : pluginLanguage === language;
+
+const isPlantUmlBlock = (
+  language: string,
+  plugin: PlantUmlPlugin | null
+): plugin is PlantUmlPlugin =>
+  Boolean(plugin && matchesPluginLanguage(language, plugin.language));
+
 const shouldShowControls = (
   config: ControlsConfig,
-  type: "table" | "code" | "mermaid"
+  type: "table" | "code" | "mermaid" | "plantuml"
 ) => {
   if (typeof config === "boolean") {
     return config;
@@ -209,6 +234,27 @@ const shouldShowMermaidControl = (
   }
 
   return mermaidConfig[controlType] !== false;
+};
+
+const shouldShowPlantUmlControl = (
+  config: ControlsConfig,
+  controlType: "download" | "copy" | "fullscreen" | "panZoom"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const plantumlConfig = config.plantuml;
+
+  if (plantumlConfig === false) {
+    return false;
+  }
+
+  if (plantumlConfig === true || plantumlConfig === undefined) {
+    return true;
+  }
+
+  return plantumlConfig[controlType] !== false;
 };
 
 interface ListContextValue {
@@ -1047,10 +1093,12 @@ const CodeComponent = ({
   const inline = !("data-block" in props);
   const {
     mermaid: mermaidContext,
+    plantuml: plantumlContext,
     controls: controlsConfig,
     lineNumbers: contextLineNumbers,
   } = useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
+  const plantumlPlugin = usePlantUmlPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
 
   const match = className?.match(LANGUAGE_REGEX);
@@ -1171,6 +1219,79 @@ const CodeComponent = ({
             <Mermaid
               chart={code}
               config={mermaidContext?.config}
+              showControls={showPanZoomControls}
+            />
+          </div>
+        </div>
+      </Suspense>
+    );
+  }
+
+  if (isPlantUmlBlock(language, plantumlPlugin)) {
+    const showPlantUmlControls = shouldShowControls(controlsConfig, "plantuml");
+    const showDownload = shouldShowPlantUmlControl(controlsConfig, "download");
+    const showCopy = shouldShowPlantUmlControl(controlsConfig, "copy");
+    const showFullscreen = shouldShowPlantUmlControl(
+      controlsConfig,
+      "fullscreen"
+    );
+    const showPanZoomControls = shouldShowPlantUmlControl(
+      controlsConfig,
+      "panZoom"
+    );
+
+    const shouldShowPlantUmlControls =
+      showPlantUmlControls && (showDownload || showCopy || showFullscreen);
+
+    return (
+      <Suspense fallback={<CodeBlockSkeleton />}>
+        <div
+          className={cn(
+            "group relative my-4 flex w-full flex-col gap-2 rounded-xl border border-border bg-sidebar p-2",
+            className
+          )}
+          data-incomplete={isBlockIncomplete || undefined}
+          data-streamdown="plantuml-block"
+        >
+          <div
+            className={cn(
+              "flex h-8 items-center text-muted-foreground text-xs"
+            )}
+          >
+            <span className={cn("ml-1 font-mono lowercase")}>{language}</span>
+          </div>
+          {shouldShowPlantUmlControls ? (
+            <div
+              className={cn(
+                "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+              )}
+            >
+              <div
+                className={cn(
+                  "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+                )}
+                data-streamdown="plantuml-block-actions"
+              >
+                {showDownload ? (
+                  <PlantUmlDownloadDropdown
+                    chart={code}
+                    config={plantumlContext?.config}
+                  />
+                ) : null}
+                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showFullscreen ? (
+                  <PlantUmlFullscreenButton
+                    chart={code}
+                    config={plantumlContext?.config}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+          <div className={cn("rounded-md border border-border bg-background")}>
+            <PlantUml
+              chart={code}
+              config={plantumlContext?.config}
               showControls={showPanZoomControls}
             />
           </div>
