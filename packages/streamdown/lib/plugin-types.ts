@@ -112,6 +112,37 @@ export interface DiagramPlugin {
 }
 
 /**
+ * Structural type for PlantUML configuration.
+ * Avoids a hard dependency on `@plantuml/core` in the core bundle.
+ */
+export interface PlantUmlConfig {
+  dark?: boolean;
+}
+
+export interface PlantUmlInstance {
+  render: (
+    source: string,
+    options?: PlantUmlConfig
+  ) => Promise<{ svg: string }>;
+}
+
+/**
+ * Plugin for diagram rendering (PlantUML)
+ */
+export interface PlantUmlPlugin {
+  /**
+   * Get the PlantUML instance (initialized with optional config)
+   */
+  getPlantUml: (config?: PlantUmlConfig) => PlantUmlInstance;
+  /**
+   * Language identifiers for code blocks (`plantuml`, `puml`)
+   */
+  language: string | readonly string[];
+  name: "plantuml";
+  type: "diagram";
+}
+
+/**
  * Plugin for math rendering (KaTeX)
  */
 export interface MathPlugin {
@@ -160,6 +191,7 @@ export interface CjkPlugin {
 export type StreamdownPlugin =
   | CodeHighlighterPlugin
   | DiagramPlugin
+  | PlantUmlPlugin
   | MathPlugin
   | CjkPlugin;
 
@@ -186,5 +218,6 @@ export interface PluginConfig {
   code?: CodeHighlighterPlugin;
   math?: MathPlugin;
   mermaid?: DiagramPlugin;
+  plantuml?: PlantUmlPlugin;
   renderers?: CustomRenderer[];
 }

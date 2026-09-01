@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { PluggableList } from "unified";
 import type { Components } from "./markdown";
-import type { MermaidConfig, ThemeInput } from "./plugin-types";
+import type { MermaidConfig, PlantUmlConfig, ThemeInput } from "./plugin-types";
 import type { CSVSeparator } from "./table/utils";
 
 export type DownloadControlConfig = boolean | { filename: string };
@@ -31,6 +31,14 @@ export type ControlsConfig =
             download?: DownloadControlConfig;
           };
       mermaid?:
+        | boolean
+        | {
+            download?: DownloadControlConfig;
+            copy?: boolean;
+            fullscreen?: boolean;
+            panZoom?: boolean;
+          };
+      plantuml?:
         | boolean
         | {
             download?: DownloadControlConfig;
@@ -68,6 +76,17 @@ export interface MermaidErrorComponentProps {
 export interface MermaidOptions {
   config?: MermaidConfig;
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+}
+
+export interface PlantUmlErrorComponentProps {
+  chart: string;
+  error: string;
+  retry: () => void;
+}
+
+export interface PlantUmlOptions {
+  config?: PlantUmlConfig;
+  errorComponent?: React.ComponentType<PlantUmlErrorComponentProps>;
 }
 
 /**
@@ -131,6 +150,7 @@ export interface StreamdownContextType {
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  plantuml?: PlantUmlOptions;
   /** Overlay portal target for fullscreen and the built-in link safety modal. */
   portal?: PortalTarget;
   rehypePlugins?: PluggableList;
@@ -160,6 +180,7 @@ export const defaultStreamdownContext: StreamdownContextType = {
   listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
+  plantuml: undefined,
   linkSafety: defaultLinkSafetyConfig,
   portal: undefined,
   tableMaxHeight: 300,

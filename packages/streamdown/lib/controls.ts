@@ -2,7 +2,7 @@ import type { ControlsConfig } from "./streamdown-context";
 
 export const getDownloadFilename = (
   config: ControlsConfig,
-  type: "code" | "table" | "mermaid",
+  type: "code" | "table" | "mermaid" | "plantuml",
   fallback: string
 ): string => {
   if (typeof config === "boolean") {

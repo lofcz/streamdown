@@ -52,6 +52,13 @@ describe("getDownloadFilename", () => {
         "diagram"
       )
     ).toBe("flowchart");
+    expect(
+      getDownloadFilename(
+        { plantuml: { download: { filename: "sequence" } } },
+        "plantuml",
+        "diagram"
+      )
+    ).toBe("sequence");
   });
 
   it("returns the fallback when filename is empty", () => {

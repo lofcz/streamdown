@@ -157,9 +157,13 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Mermaid diagram configuration and error handling",
       type: "MermaidOptions",
     },
+    plantuml: {
+      description: "PlantUML diagram configuration and error handling",
+      type: "PlantUmlOptions",
+    },
     controls: {
       description:
-        "Control visibility of interactive buttons and custom download filenames for code, tables, and mermaid diagrams.",
+        "Control visibility of interactive buttons and custom download filenames for code, tables, mermaid, and PlantUML diagrams.",
       type: "ControlsConfig",
       default: "true",
     },
@@ -387,13 +391,19 @@ The `controls` prop can be configured granularly. Set a block type to `false` to
       fullscreen: true, // Show mermaid fullscreen button
       panZoom: true, // Show mermaid pan/zoom controls
     },
+    plantuml: {
+      download: { filename: "sequence" }, // Download as sequence.svg / sequence.png / sequence.puml
+      copy: true,
+      fullscreen: true,
+      panZoom: true,
+    },
   }}
 >
   {markdown}
 </Streamdown>
 ```
 
-You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, and `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid.
+You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid, and `diagram.svg` / `diagram.png` / `diagram.puml` for PlantUML.
 
 ### Remend Options
 

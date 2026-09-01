@@ -145,6 +145,19 @@ Releases are automated through GitHub Actions and changesets:
 2. This PR updates package versions and changelogs
 3. When the Version Packages PR is merged, packages are automatically published to npm
 
+A **brand-new** public package cannot use OIDC on its first publish (the trusted
+publisher attaches to an existing registry name). Claim the name once from an
+interactive terminal, then later trains go through `release.yml` like everything else:
+
+```bash
+# interactive npm login + 2FA; no NPM_TOKEN
+pnpm bootstrap:package @lofcz/streamdown-plantuml
+```
+
+That publishes a `0.0.0-bootstrap.0` stub on the `bootstrap` dist-tag (not `latest`)
+and runs `npm trust github` for `lofcz/streamdown-ng` / `release.yml`. Dry-run first
+with `--dry-run`. Attach trust later for every public package with `pnpm trust:packages`.
+
 ## Code Style
 
 - We use TypeScript for type safety
