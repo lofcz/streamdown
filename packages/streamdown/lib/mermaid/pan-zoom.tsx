@@ -1,5 +1,11 @@
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
@@ -18,11 +24,155 @@ interface PanZoomProps {
   zoomStep?: number;
 }
 
+const positiveOrNull = (px: number): number | null => (px > 0 ? px : null);
+
+const parseLengthPx = (value: string, element: HTMLElement): number | null => {
+  if (value.endsWith("px")) {
+    return positiveOrNull(Number.parseFloat(value));
+  }
+
+  if (value.endsWith("rem")) {
+    const rootFontSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize || "16"
+    );
+    return positiveOrNull(Number.parseFloat(value) * rootFontSize);
+  }
+
+  if (value.endsWith("em")) {
+    const fontSize = Number.parseFloat(
+      getComputedStyle(element).fontSize || "16"
+    );
+    return positiveOrNull(Number.parseFloat(value) * fontSize);
+  }
+
+  if (value.endsWith("vh")) {
+    return positiveOrNull(
+      (Number.parseFloat(value) / 100) * window.innerHeight
+    );
+  }
+
+  if (value.endsWith("%")) {
+    const parent = element.parentElement;
+    if (!(parent && parent.clientHeight > 0)) {
+      return null;
+    }
+    return positiveOrNull(
+      (Number.parseFloat(value) / 100) * parent.clientHeight
+    );
+  }
+
+  return null;
+};
+
+/**
+ * Resolve CSS max-height to pixels when possible.
+ * Returns null when max-height does not constrain the element.
+ */
+const resolveMaxHeightPx = (
+  element: HTMLElement,
+  maxHeight: string
+): number | null => {
+  const value = maxHeight.trim().toLowerCase();
+  if (!value || value === "none" || value === "auto") {
+    return null;
+  }
+
+  return parseLengthPx(value, element);
+};
+
+const MIN_MAX_HEIGHT_REGEX = /^min\(\s*([^,]+)\s*,\s*([^)]+)\s*\)$/i;
+
+/**
+ * Evaluate simple `min(a, b)` max-height expressions used in Tailwind utilities
+ * like `max-h-[min(70vh,40rem)]`.
+ */
+const resolveComplexMaxHeightPx = (
+  element: HTMLElement,
+  maxHeight: string
+): number | null => {
+  const direct = resolveMaxHeightPx(element, maxHeight);
+  if (direct != null) {
+    return direct;
+  }
+
+  const minMatch = maxHeight.trim().match(MIN_MAX_HEIGHT_REGEX);
+  if (!minMatch) {
+    return null;
+  }
+
+  const left = resolveMaxHeightPx(element, minMatch[1].trim());
+  const right = resolveMaxHeightPx(element, minMatch[2].trim());
+  if (left == null || right == null) {
+    return null;
+  }
+  return Math.min(left, right);
+};
+
+const computeFit = (
+  contentSize: { height: number; width: number },
+  container: HTMLElement,
+  fullscreen: boolean
+): { fitZoom: number; viewportHeight: number | null } | null => {
+  const containerWidth = container.clientWidth;
+  if (!(containerWidth > 0)) {
+    return null;
+  }
+
+  if (fullscreen) {
+    const containerHeight = container.clientHeight;
+    if (!(containerHeight > 0)) {
+      return null;
+    }
+
+    const fitZoom = Math.min(
+      containerWidth / contentSize.width,
+      containerHeight / contentSize.height,
+      1
+    );
+
+    if (!(fitZoom > 0) || Number.isNaN(fitZoom)) {
+      return null;
+    }
+
+    return { fitZoom, viewportHeight: null };
+  }
+
+  // Fit to container width first so the card never expands past the text column.
+  const widthFit = Math.min(containerWidth / contentSize.width, 1);
+  if (!(widthFit > 0) || Number.isNaN(widthFit)) {
+    return null;
+  }
+
+  const heightAtWidthFit = contentSize.height * widthFit;
+
+  // Cap tall diagrams using CSS max-height on this viewport or its parents.
+  let maxHeightPx: number | null = null;
+  let node: HTMLElement | null = container;
+  while (node && maxHeightPx == null) {
+    const styles = getComputedStyle(node);
+    maxHeightPx = resolveComplexMaxHeightPx(node, styles.maxHeight);
+    node = node.parentElement;
+  }
+
+  const viewportHeight =
+    maxHeightPx != null
+      ? Math.min(heightAtWidthFit, maxHeightPx)
+      : heightAtWidthFit;
+
+  const fitZoom = Math.min(widthFit, viewportHeight / contentSize.height, 1);
+
+  if (!(fitZoom > 0) || Number.isNaN(fitZoom)) {
+    return null;
+  }
+
+  return { fitZoom, viewportHeight };
+};
+
 export const PanZoom = ({
   children,
   className,
   contentSize,
-  fitKey: _fitKey,
+  fitKey,
   minZoom = 0.5,
   maxZoom = 3,
   zoomStep = 0.1,
@@ -36,14 +186,44 @@ export const PanZoom = ({
   const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const hasUserInteractedRef = useRef(false);
   const [baseZoom, setBaseZoom] = useState(initialZoom);
   const [effectiveMinZoom, setEffectiveMinZoom] = useState(minZoom);
   const [zoom, setZoom] = useState(initialZoom);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [panStartPosition, setPanStartPosition] = useState({ x: 0, y: 0 });
+  // Intrinsic height of the viewport once the diagram is scaled to container width.
+  // Height is independent of the fitted scale transform so the card doesn't balloon
+  // with the SVG's native size. Capped by max-height CSS when tall.
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+
+  const applyFit = useCallback(
+    (nextContentSize: { height: number; width: number }) => {
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+
+      const result = computeFit(nextContentSize, container, fullscreen);
+      if (!result) {
+        return;
+      }
+
+      const { fitZoom, viewportHeight: nextViewportHeight } = result;
+
+      setViewportHeight(nextViewportHeight);
+      setBaseZoom(fitZoom);
+      setEffectiveMinZoom(Math.min(minZoom, fitZoom));
+
+      if (!hasUserInteractedRef.current) {
+        setZoom(fitZoom);
+        setPan({ x: 0, y: 0 });
+      }
+    },
+    [fullscreen, minZoom]
+  );
 
   const handleZoom = useCallback(
     (delta: number) => {
@@ -54,7 +234,7 @@ export const PanZoom = ({
         );
         return newZoom;
       });
-      setHasUserInteracted(true);
+      hasUserInteractedRef.current = true;
     },
     [effectiveMinZoom, maxZoom]
   );
@@ -70,7 +250,7 @@ export const PanZoom = ({
   const handleReset = useCallback(() => {
     setZoom(baseZoom);
     setPan({ x: 0, y: 0 });
-    setHasUserInteracted(false);
+    hasUserInteractedRef.current = false;
   }, [baseZoom]);
 
   const handleWheel = useCallback(
@@ -89,7 +269,7 @@ export const PanZoom = ({
         return;
       }
       setIsPanning(true);
-      setHasUserInteracted(true);
+      hasUserInteractedRef.current = true;
       setPanStart({ x: e.clientX, y: e.clientY });
       setPanStartPosition(pan);
       // Capture the pointer to track it even outside the element
@@ -132,52 +312,41 @@ export const PanZoom = ({
     if (!isAutoFit) {
       setBaseZoom(initialZoom);
       setZoom(initialZoom);
+      setViewportHeight(null);
     }
   }, [initialZoom, isAutoFit, minZoom]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!(isAutoFit && contentSize)) {
       return;
     }
 
+    applyFit(contentSize);
+
     const container = containerRef.current;
-    if (!container) {
+    if (!container || typeof ResizeObserver === "undefined") {
       return;
     }
 
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
+    const observer = new ResizeObserver(() => {
+      applyFit(contentSize);
+    });
+    observer.observe(container);
 
-    if (!(containerWidth > 0 && containerHeight > 0)) {
-      return;
-    }
+    return () => {
+      observer.disconnect();
+    };
+  }, [applyFit, contentSize, isAutoFit]);
 
-    const fitZoom = Math.min(
-      containerWidth / contentSize.width,
-      containerHeight / contentSize.height,
-      1
-    );
-
-    if (!(fitZoom > 0) || Number.isNaN(fitZoom)) {
-      return;
-    }
-
-    setBaseZoom(fitZoom);
-    setEffectiveMinZoom(Math.min(minZoom, fitZoom));
-
-    if (!hasUserInteracted) {
-      setZoom(fitZoom);
-      setPan({ x: 0, y: 0 });
-    }
-  }, [contentSize, hasUserInteracted, isAutoFit, minZoom]);
-
+  // fitKey is an intentional trigger: new diagram identity should re-enable auto-fit.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fitKey resets interaction even though it is not read
   useEffect(() => {
     if (!isAutoFit) {
       return;
     }
 
-    setHasUserInteracted(false);
-  }, [isAutoFit]);
+    hasUserInteractedRef.current = false;
+  }, [fitKey, isAutoFit]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -218,6 +387,11 @@ export const PanZoom = ({
     }
   }, [isPanning, handlePointerMove, handlePointerUp]);
 
+  const viewportStyle: CSSProperties | undefined =
+    !fullscreen && isAutoFit && viewportHeight != null
+      ? { height: viewportHeight }
+      : undefined;
+
   return (
     <div
       className={cn(
@@ -226,7 +400,10 @@ export const PanZoom = ({
         className
       )}
       ref={containerRef}
-      style={{ cursor: isPanning ? "grabbing" : "grab" }}
+      style={{
+        cursor: isPanning ? "grabbing" : "grab",
+        ...viewportStyle,
+      }}
     >
       {showControls ? (
         <div
@@ -274,10 +451,7 @@ export const PanZoom = ({
       ) : null}
       <div
         className={cn(
-          "flex-1 origin-center transition-transform duration-150 ease-out",
-          fullscreen
-            ? "flex h-full w-full items-center justify-center"
-            : "flex w-full items-center justify-center"
+          "flex h-full w-full flex-1 origin-center items-center justify-center transition-transform duration-150 ease-out"
         )}
         onPointerDown={handlePointerDown}
         ref={contentRef}

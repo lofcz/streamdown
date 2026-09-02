@@ -1215,7 +1215,11 @@ const CodeComponent = ({
               </div>
             </div>
           ) : null}
-          <div className={cn("rounded-md border border-border bg-background")}>
+          <div
+            className={cn(
+              "overflow-hidden rounded-md border border-border bg-background"
+            )}
+          >
             <Mermaid
               chart={code}
               config={mermaidContext?.config}
