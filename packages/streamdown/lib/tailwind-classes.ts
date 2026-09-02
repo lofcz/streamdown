@@ -87,6 +87,7 @@ export const STREAMDOWN_CLASSES: readonly string[] = [
   "group-hover:opacity-100",
   "h-4",
   "h-8",
+  "h-[400px]",
   "h-[46px]",
   "h-auto",
   "h-full",
