@@ -1,5 +1,21 @@
 # streamdown
 
+## 2.13.0
+
+### Minor Changes
+
+- 83936c3: Add first-class OpenSCAD models. Fenced `openscad` / `scad` blocks render via `@lofcz/streamdown-openscad`, which lazy-loads the `@lofcz/openscad-wasm` engine (bundler graph only — the engine entry is a separate import so apps that don't use it never pull the ~11MB wasm) and displays the result with an interactive three.js viewer in its own lazy chunk. Format auto-selection keeps `color()` models as 3MF and everything else as binary STL; font/MCAD bundles load only when the source uses `text()` / MCAD includes. Controls (copy, download SCAD/STL/3MF, fullscreen) match PlantUML.
+
+### Patch Changes
+
+- Fix block splitting under marked v18: fold standalone `space` tokens into the previous block so block boundaries and counts stay identical to v17 behavior. Ported from upstream vercel/streamdown#603 (the fork already shipped marked v18, shiki v4, and the incomplete-image placeholder, so only this parsing fix is new here).
+- 8b1383f: Fix Mermaid diagrams so text is readable and diagrams auto-fit container.
+  - Normalize SVG to remove responsive shrinking
+  - Extract intrinsic size from viewBox
+  - Add width-and-height auto-fit in PanZoom
+  - Preserve user zoom/pan after initial fit
+  - Add tests for SVG utilities and auto-fit behavior
+
 ## 2.12.0
 
 ### Minor Changes
