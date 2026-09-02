@@ -1,0 +1,48 @@
+---
+title: "@streamdown/openscad"
+description: Render OpenSCAD 3D models with an interactive viewer, straight in chat.
+type: reference
+summary: Client-side OpenSCAD rendering via @lofcz/openscad-wasm, with an interactive three.js viewer.
+prerequisites:
+  - /docs/plugins
+related:
+  - /docs/code-blocks
+  - /docs/plugins/plantuml
+---
+
+The `@streamdown/openscad` plugin renders [OpenSCAD](https://openscad.org/) models in the browser using the WebAssembly port (`@lofcz/openscad-wasm`). The ~11MB engine is only fetched when an `openscad` or `scad` fence actually scrolls into view, and the three.js viewer lives in its own lazy chunk — neither ever lands in eagerly loaded code.
+
+- Interactive orbit/pan/zoom 3D viewer, with fullscreen
+- `color()` models export as 3MF (colors preserved); everything else as binary STL
+- Font and MCAD bundles load only when the source uses `text()` / MCAD includes
+- Custom error handling with retry
+
+## Install
+
+```package-install
+npm install @streamdown/openscad @lofcz/openscad-wasm
+```
+
+The wasm engine is an optional peer dependency: importing the engine entry is what pulls it into your bundler's module graph, so apps that don't use the plugin never bundle it.
+
+## Usage
+
+```tsx title="chat.tsx" lineNumbers
+import { createOpenScadPlugin } from '@streamdown/openscad';
+import { engine } from '@streamdown/openscad/engine';
+
+const openscad = createOpenScadPlugin({ engine });
+
+<Streamdown plugins={{ openscad }}>
+```
+
+```scad title="Example"
+color("orange") cube(10, center = true);
+translate([15, 0, 0]) sphere(6, $fn = 64);
+```
+
+## Options
+
+- `config.format` — `"auto"` (default) keeps `color()` models as 3MF and uses binary STL otherwise; force `"stl"` or `"3mf"`
+- `openscad={{ errorComponent }}` — custom error UI with retry
+- `controls.openscad` — toggle download (SCAD/STL/3MF), copy and fullscreen

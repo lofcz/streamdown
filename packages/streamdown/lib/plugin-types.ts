@@ -186,6 +186,44 @@ export interface CjkPlugin {
 }
 
 /**
+ * Structural type for OpenSCAD configuration.
+ * Avoids a hard dependency on `@lofcz/streamdown-openscad` in the core bundle.
+ */
+export interface OpenScadConfig {
+  format?: "stl" | "3mf" | "auto";
+}
+
+export type OpenScadExportFormat = "stl" | "3mf";
+
+export interface OpenScadRenderResult {
+  data: Uint8Array;
+  format: OpenScadExportFormat;
+}
+
+export interface OpenScadInstance {
+  render: (
+    source: string,
+    options?: OpenScadConfig
+  ) => Promise<OpenScadRenderResult>;
+}
+
+/**
+ * Plugin for 3D model rendering (OpenSCAD)
+ */
+export interface OpenScadPlugin {
+  /**
+   * Get the OpenSCAD instance (initialized with optional config)
+   */
+  getOpenScad: (config?: OpenScadConfig) => OpenScadInstance;
+  /**
+   * Language identifiers for code blocks (`openscad`, `scad`)
+   */
+  language: string | readonly string[];
+  name: "openscad";
+  type: "model";
+}
+
+/**
  * Union type for all plugins
  */
 export type StreamdownPlugin =
@@ -193,7 +231,8 @@ export type StreamdownPlugin =
   | DiagramPlugin
   | PlantUmlPlugin
   | MathPlugin
-  | CjkPlugin;
+  | CjkPlugin
+  | OpenScadPlugin;
 
 export interface CustomRendererProps {
   code: string;
@@ -218,6 +257,7 @@ export interface PluginConfig {
   code?: CodeHighlighterPlugin;
   math?: MathPlugin;
   mermaid?: DiagramPlugin;
+  openscad?: OpenScadPlugin;
   plantuml?: PlantUmlPlugin;
   renderers?: CustomRenderer[];
 }

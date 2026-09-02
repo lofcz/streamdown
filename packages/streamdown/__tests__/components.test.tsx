@@ -492,6 +492,74 @@ describe("Markdown Components", () => {
         ).toBeTruthy();
       });
     });
+
+    it("should render openscad code as regular code block when plugin not provided", async () => {
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
+      const { container } = render(
+        <Code
+          className="language-openscad"
+          data-block="true"
+          node={null as any}
+        >
+          {"cube(10);"}
+        </Code>
+      );
+
+      await waitFor(() => {
+        const codeBlock = container.querySelector(
+          '[data-streamdown="code-block"]'
+        );
+        expect(codeBlock).toBeTruthy();
+      });
+
+      expect(
+        container
+          .querySelector('[data-streamdown="code-block"]')
+          ?.getAttribute("data-language")
+      ).toBe("openscad");
+      expect(
+        container.querySelector('[data-streamdown="openscad-block"]')
+      ).toBeNull();
+    });
+
+    it("should render openscad block when plugin is provided", async () => {
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
+
+      const { PluginContext } = await import("../lib/plugin-context");
+      const { vi } = await import("vitest");
+
+      const mockOpenScadPlugin = {
+        name: "openscad" as const,
+        type: "model" as const,
+        language: ["openscad", "scad"],
+        getOpenScad: vi.fn().mockReturnValue({
+          render: vi.fn().mockResolvedValue({
+            data: new Uint8Array([1, 2, 3]),
+            format: "stl",
+          }),
+        }),
+      };
+
+      const { container } = render(
+        <PluginContext.Provider value={{ openscad: mockOpenScadPlugin }}>
+          <Code className="language-scad" data-block="true" node={null as any}>
+            {"cube(10);"}
+          </Code>
+        </PluginContext.Provider>
+      );
+
+      await waitFor(() => {
+        expect(
+          container.querySelector('[data-streamdown="openscad-block"]')
+        ).toBeTruthy();
+      });
+    });
   });
 
   describe("Table Components", () => {

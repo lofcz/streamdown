@@ -58,6 +58,7 @@ import {
   type LinkSafetyConfig,
   type ListStylePreset,
   type MermaidOptions,
+  type OpenScadOptions,
   type PlantUmlOptions,
   type PortalTarget,
   type ScrollableComponent,
@@ -122,6 +123,8 @@ export type {
   LinkSafetyModalProps,
   MermaidErrorComponentProps,
   MermaidOptions,
+  OpenScadErrorComponentProps,
+  OpenScadOptions,
   PlantUmlErrorComponentProps,
   PlantUmlOptions,
   PortalTarget,
@@ -202,6 +205,7 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  openscad?: OpenScadOptions;
   plantuml?: PlantUmlOptions;
   codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
@@ -560,6 +564,7 @@ export const Streamdown = memo(
     className,
     shikiTheme,
     mermaid,
+    openscad,
     plantuml,
     codeBlockMaxHeight = 400,
     controls = true,
@@ -963,6 +968,7 @@ export const Streamdown = memo(
         listStyle,
         mode,
         mermaid,
+        openscad,
         plantuml,
         linkSafety,
         portal,
@@ -983,6 +989,7 @@ export const Streamdown = memo(
         listStyle,
         mode,
         mermaid,
+        openscad,
         plantuml,
         linkSafety,
         portal,

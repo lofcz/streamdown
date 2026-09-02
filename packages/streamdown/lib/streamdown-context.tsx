@@ -8,7 +8,12 @@ import {
 } from "react";
 import type { PluggableList } from "unified";
 import type { Components } from "./markdown";
-import type { MermaidConfig, PlantUmlConfig, ThemeInput } from "./plugin-types";
+import type {
+  MermaidConfig,
+  OpenScadConfig,
+  PlantUmlConfig,
+  ThemeInput,
+} from "./plugin-types";
 import type { CSVSeparator } from "./table/utils";
 
 export type DownloadControlConfig = boolean | { filename: string };
@@ -45,6 +50,13 @@ export type ControlsConfig =
             copy?: boolean;
             fullscreen?: boolean;
             panZoom?: boolean;
+          };
+      openscad?:
+        | boolean
+        | {
+            download?: DownloadControlConfig;
+            copy?: boolean;
+            fullscreen?: boolean;
           };
       image?:
         | boolean
@@ -87,6 +99,17 @@ export interface PlantUmlErrorComponentProps {
 export interface PlantUmlOptions {
   config?: PlantUmlConfig;
   errorComponent?: React.ComponentType<PlantUmlErrorComponentProps>;
+}
+
+export interface OpenScadErrorComponentProps {
+  code: string;
+  error: string;
+  retry: () => void;
+}
+
+export interface OpenScadOptions {
+  config?: OpenScadConfig;
+  errorComponent?: React.ComponentType<OpenScadErrorComponentProps>;
 }
 
 /**
@@ -150,6 +173,7 @@ export interface StreamdownContextType {
   listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  openscad?: OpenScadOptions;
   plantuml?: PlantUmlOptions;
   /** Overlay portal target for fullscreen and the built-in link safety modal. */
   portal?: PortalTarget;
@@ -180,6 +204,7 @@ export const defaultStreamdownContext: StreamdownContextType = {
   listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
+  openscad: undefined,
   plantuml: undefined,
   linkSafety: defaultLinkSafetyConfig,
   portal: undefined,

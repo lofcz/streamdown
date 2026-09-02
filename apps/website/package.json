@@ -17,6 +17,7 @@
     "@streamdown/code": "workspace:@lofcz/streamdown-code@*",
     "@streamdown/math": "workspace:@lofcz/streamdown-math@*",
     "@streamdown/mermaid": "workspace:@lofcz/streamdown-mermaid@*",
+    "@streamdown/openscad": "workspace:@lofcz/streamdown-openscad@*",
     "@streamdown/plantuml": "workspace:@lofcz/streamdown-plantuml@*",
     "@vercel/analytics": "^1.6.1",
     "@vercel/geistdocs": "1.23.1",

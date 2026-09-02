@@ -1,4 +1,4 @@
 {
   "title": "Plugins",
-  "pages": ["index", "code", "mermaid", "plantuml", "math", "cjk"]
+  "pages": ["index", "code", "mermaid", "plantuml", "openscad", "math", "cjk"]
 }

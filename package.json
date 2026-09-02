@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:packages": "pnpm build --filter @lofcz/streamdown --filter @lofcz/streamdown-math --filter @lofcz/streamdown-code --filter @lofcz/streamdown-cjk --filter @lofcz/streamdown-mermaid --filter @lofcz/streamdown-plantuml --filter @lofcz/remend",
+    "build:packages": "pnpm build --filter @lofcz/streamdown --filter @lofcz/streamdown-math --filter @lofcz/streamdown-code --filter @lofcz/streamdown-cjk --filter @lofcz/streamdown-mermaid --filter @lofcz/streamdown-plantuml --filter @lofcz/streamdown-openscad --filter @lofcz/remend",
     "dev": "turbo run dev",
     "check": "ultracite check",
     "fix": "ultracite fix",

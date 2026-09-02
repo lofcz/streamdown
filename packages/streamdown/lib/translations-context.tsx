@@ -29,6 +29,10 @@ export interface StreamdownTranslations {
   downloadFile: string;
   // Image
   downloadImage: string;
+  downloadModel: string;
+  downloadModelAs3mf: string;
+  downloadModelAsScad: string;
+  downloadModelAsStl: string;
   downloadTable: string;
   downloadTableAsCsv: string;
   downloadTableAsMarkdown: string;
@@ -40,6 +44,9 @@ export interface StreamdownTranslations {
   mermaidFormatSvg: string;
   openExternalLink: string;
   openLink: string;
+  openscadFormat3mf: string;
+  openscadFormatScad: string;
+  openscadFormatStl: string;
   plantumlFormatPng: string;
   plantumlFormatPuml: string;
   plantumlFormatSvg: string;
@@ -73,6 +80,13 @@ export const defaultTranslations: StreamdownTranslations = {
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",
+  downloadModel: "Download model",
+  downloadModelAsScad: "Download model as SCAD",
+  downloadModelAsStl: "Download model as STL",
+  downloadModelAs3mf: "Download model as 3MF",
+  openscadFormatScad: "SCAD",
+  openscadFormatStl: "STL",
+  openscadFormat3mf: "3MF",
   plantumlFormatSvg: "SVG",
   plantumlFormatPng: "PNG",
   plantumlFormatPuml: "PUML",

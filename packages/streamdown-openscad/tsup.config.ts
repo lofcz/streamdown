@@ -1,13 +1,17 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["index.tsx", "lib/tailwind-classes.ts"],
+  entry: ["index.ts", "engine.ts"],
   format: ["esm"],
   minify: true,
   outDir: "dist",
   sourcemap: false,
-  external: ["react", "react-dom", "three", /^three\//],
   treeshake: true,
-  splitting: true,
   platform: "browser",
+  external: [
+    "react",
+    "react-dom",
+    "@lofcz/openscad-wasm",
+    /^@lofcz\/openscad-wasm/,
+  ],
 });

@@ -38,6 +38,14 @@ export const usePlantUmlPlugin = () => {
 };
 
 /**
+ * Hook to access the OpenSCAD plugin
+ */
+export const useOpenScadPlugin = () => {
+  const plugins = usePlugins();
+  return plugins?.openscad ?? null;
+};
+
+/**
  * Hook to access the math plugin
  */
 export const useMathPlugin = () => {

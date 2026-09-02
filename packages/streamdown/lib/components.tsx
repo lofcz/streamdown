@@ -26,14 +26,17 @@ import type { ExtraProps, Options } from "./markdown";
 import { Markdown } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
+import { OpenScadDownloadDropdown } from "./openscad/download-button";
+import { OpenScadFullscreenButton } from "./openscad/fullscreen-button";
 import { PlantUmlDownloadDropdown } from "./plantuml/download-button";
 import { PlantUmlFullscreenButton } from "./plantuml/fullscreen-button";
 import {
   useCustomRenderer,
   useMermaidPlugin,
+  useOpenScadPlugin,
   usePlantUmlPlugin,
 } from "./plugin-context";
-import type { PlantUmlPlugin } from "./plugin-types";
+import type { OpenScadPlugin, PlantUmlPlugin } from "./plugin-types";
 import { useCn } from "./prefix-context";
 // BundledLanguage type removed - we now support any language string
 import {
@@ -56,6 +59,10 @@ const Mermaid = lazy(() =>
 
 const PlantUml = lazy(() =>
   import("./plantuml").then((mod) => ({ default: mod.PlantUml }))
+);
+
+const OpenScad = lazy(() =>
+  import("./openscad").then((mod) => ({ default: mod.OpenScad }))
 );
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -162,9 +169,15 @@ const isPlantUmlBlock = (
 ): plugin is PlantUmlPlugin =>
   Boolean(plugin && matchesPluginLanguage(language, plugin.language));
 
+const isOpenScadBlock = (
+  language: string,
+  plugin: OpenScadPlugin | null
+): plugin is OpenScadPlugin =>
+  Boolean(plugin && matchesPluginLanguage(language, plugin.language));
+
 const shouldShowControls = (
   config: ControlsConfig,
-  type: "table" | "code" | "mermaid" | "plantuml"
+  type: "table" | "code" | "mermaid" | "plantuml" | "openscad"
 ) => {
   if (typeof config === "boolean") {
     return config;
@@ -255,6 +268,27 @@ const shouldShowPlantUmlControl = (
   }
 
   return plantumlConfig[controlType] !== false;
+};
+
+const shouldShowOpenScadControl = (
+  config: ControlsConfig,
+  controlType: "download" | "copy" | "fullscreen"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const openscadConfig = config.openscad;
+
+  if (openscadConfig === false) {
+    return false;
+  }
+
+  if (openscadConfig === true || openscadConfig === undefined) {
+    return true;
+  }
+
+  return openscadConfig[controlType] !== false;
 };
 
 interface ListContextValue {
@@ -1094,11 +1128,13 @@ const CodeComponent = ({
   const {
     mermaid: mermaidContext,
     plantuml: plantumlContext,
+    openscad: openscadContext,
     controls: controlsConfig,
     lineNumbers: contextLineNumbers,
   } = useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
   const plantumlPlugin = usePlantUmlPlugin();
+  const openscadPlugin = useOpenScadPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
 
   const match = className?.match(LANGUAGE_REGEX);
@@ -1298,6 +1334,71 @@ const CodeComponent = ({
               config={plantumlContext?.config}
               showControls={showPanZoomControls}
             />
+          </div>
+        </div>
+      </Suspense>
+    );
+  }
+
+  if (isOpenScadBlock(language, openscadPlugin)) {
+    const showOpenScadControls = shouldShowControls(controlsConfig, "openscad");
+    const showDownload = shouldShowOpenScadControl(controlsConfig, "download");
+    const showCopy = shouldShowOpenScadControl(controlsConfig, "copy");
+    const showFullscreen = shouldShowOpenScadControl(
+      controlsConfig,
+      "fullscreen"
+    );
+
+    const shouldShowOpenScadBlockControls =
+      showOpenScadControls && (showDownload || showCopy || showFullscreen);
+
+    return (
+      <Suspense fallback={<CodeBlockSkeleton />}>
+        <div
+          className={cn(
+            "group relative my-4 flex w-full flex-col gap-2 rounded-xl border border-border bg-sidebar p-2",
+            className
+          )}
+          data-incomplete={isBlockIncomplete || undefined}
+          data-streamdown="openscad-block"
+        >
+          <div
+            className={cn(
+              "flex h-8 items-center text-muted-foreground text-xs"
+            )}
+          >
+            <span className={cn("ml-1 font-mono lowercase")}>{language}</span>
+          </div>
+          {shouldShowOpenScadBlockControls ? (
+            <div
+              className={cn(
+                "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+              )}
+            >
+              <div
+                className={cn(
+                  "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+                )}
+                data-streamdown="openscad-block-actions"
+              >
+                {showDownload ? (
+                  <OpenScadDownloadDropdown
+                    code={code}
+                    config={openscadContext?.config}
+                  />
+                ) : null}
+                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showFullscreen ? (
+                  <OpenScadFullscreenButton
+                    code={code}
+                    config={openscadContext?.config}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+          <div className={cn("rounded-md border border-border bg-background")}>
+            <OpenScad code={code} config={openscadContext?.config} />
           </div>
         </div>
       </Suspense>
