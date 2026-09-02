@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.13.1
+
+### Patch Changes
+
+- 34e24e1: Add the OpenSCAD viewer's default `h-[400px]` to the Tailwind source class list so consumer apps generate the utility (the viewer container would otherwise collapse to zero height).
+
 ## 2.13.0
 
 ### Minor Changes
