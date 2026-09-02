@@ -588,7 +588,7 @@ importers:
     dependencies:
       '@lofcz/openscad-wasm':
         specifier: '*'
-        version: 0.0.0-bootstrap.0
+        version: 0.0.1
       react:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.3
@@ -1549,8 +1549,8 @@ packages:
   '@lofcz/mdast-util-gfm@3.1.0':
     resolution: {integrity: sha512-YOZSkJTSFMwqVt9TJPmEVqqqm4X1ixDE8Y8r+ttnUe2MBMB/9ZGOmF9co2PDYhHL1/DwHpjyx7O49XBb356K4g==}
 
-  '@lofcz/openscad-wasm@0.0.0-bootstrap.0':
-    resolution: {integrity: sha512-NEV0EM4CH13kDIgMeKzlr4smjwgfxmEPam56x4hiK3XcfR1xjE3QAUAFyi6W67kAelnXdKy0dkGIURMdWnD1Zw==}
+  '@lofcz/openscad-wasm@0.0.1':
+    resolution: {integrity: sha512-hsZj2SJUOcEJh27JWE3vgiPWNNLgDtWqwAUpwAEcONswxrio2ZXmCa5cWGBP2jyUmy5+2ctDJBbO7UDdpn86Zw==}
 
   '@lofcz/remark-gfm@4.0.1':
     resolution: {integrity: sha512-RzjeWkrs/rr638jzpTo/aqUUwUg9HNihlTDrupmSILqVI3ZtO1YUu3nTM126j8wEpw2ftc3pscDidXNQaOwXUw==}
@@ -7989,7 +7989,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@lofcz/openscad-wasm@0.0.0-bootstrap.0': {}
+  '@lofcz/openscad-wasm@0.0.1': {}
 
   '@lofcz/remark-gfm@4.0.1':
     dependencies:
