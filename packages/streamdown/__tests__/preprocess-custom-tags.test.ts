@@ -130,4 +130,40 @@ describe("preprocessCustomTags", () => {
       'before <vfs-cite path="a.pdf" ></vfs-cite> after'
     );
   });
+
+  describe("tags shown inside code", () => {
+    it("should leave a self-closing tag inside inline code alone", () => {
+      const md = 'use `<vfs-cite path="a.pdf" />` inline';
+      expect(preprocessCustomTags(md, ["vfs-cite"])).toBe(md);
+    });
+
+    it("should leave a multi-line pair inside a fence alone", () => {
+      const md = "```html\n<ai-thinking>\n**bold**\n</ai-thinking>\n```";
+      expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(md);
+    });
+
+    it("should not treat a bare tag in a code span as an unclosed open tag", () => {
+      // Streaming shape: `<ai-thinking>` in backticks followed by more lines
+      // used to be seen as an open tag with a multi-line body and get a blank
+      // line + <!----> placeholders injected into the surrounding prose.
+      const md = "The `<ai-thinking>` tag:\nline two\n\nline three";
+      expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(md);
+    });
+
+    it("should still normalize a real pair after a code-span mention", () => {
+      const md =
+        "See `<ai-thinking>`.\n<ai-thinking>\n**bold**\n</ai-thinking>";
+      expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(
+        "See `<ai-thinking>`.\n<ai-thinking>\n\n**bold**\n\n</ai-thinking>\n\n"
+      );
+    });
+
+    it("should not close a container at a close tag inside a nested fence", () => {
+      const md =
+        "<ai-thinking>\n\n```\n</ai-thinking>\n```\n\nstill inside\n</ai-thinking>";
+      expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(
+        "<ai-thinking>\n\n<!---->\n```\n</ai-thinking>\n```\n<!---->\nstill inside\n\n</ai-thinking>\n\n"
+      );
+    });
+  });
 });

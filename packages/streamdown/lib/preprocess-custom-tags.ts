@@ -39,7 +39,16 @@
  *
  * `parseMarkdownIntoBlocks` re-merges the interrupted open/content/close
  * tokens so streaming still treats the whole custom tag as one block.
+ *
+ * 6. **Tags inside code** (fenced blocks, inline code spans) are ignored in
+ *    every pass — they are examples being shown, not markup being used.
  */
+
+import {
+  createCodeRangeLookup,
+  replaceOutsideCode,
+  replaceTagPairsOutsideCode,
+} from "./code-ranges";
 
 const LEADING_NEWLINES_RE = /^\n*/;
 const TRAILING_NEWLINES_RE = /\n*$/;
@@ -80,7 +89,18 @@ const normalizeUnclosedOpenTags = (
   markdown: string,
   tagName: string
 ): string => {
-  const openOnly = new RegExp(`<(${tagName})(?=[\\s>/])([^>]*)>`, "gi");
+  const openOnly = new RegExp(`<${tagName}(?=[\\s>/])[^>]*>`, "gi");
+  const closeRe = new RegExp(`</${tagName}\\s*>`, "gi");
+  const isInsideCode = createCodeRangeLookup(markdown);
+
+  const hasCloseOutsideCodeAfter = (from: number): boolean => {
+    closeRe.lastIndex = from;
+    let close = closeRe.exec(markdown);
+    while (close && isInsideCode(close.index)) {
+      close = closeRe.exec(markdown);
+    }
+    return close !== null;
+  };
 
   let result = "";
   let lastIndex = 0;
@@ -88,16 +108,21 @@ const normalizeUnclosedOpenTags = (
 
   while (match) {
     const fullOpen = match[0];
-    const name = match[1];
     const openEnd = match.index + fullOpen.length;
-    const after = markdown.slice(openEnd);
 
-    // Skip if a matching close tag exists later — closed-pair pass owns it.
-    const closeRe = new RegExp(`</${name}\\s*>`, "i");
-    if (closeRe.test(after)) {
+    // A tag shown inside code is not an open tag.
+    if (isInsideCode(match.index)) {
       match = openOnly.exec(markdown);
       continue;
     }
+
+    // Skip if a matching close tag exists later — closed-pair pass owns it.
+    if (hasCloseOutsideCodeAfter(openEnd)) {
+      match = openOnly.exec(markdown);
+      continue;
+    }
+
+    const after = markdown.slice(openEnd);
 
     result += markdown.slice(lastIndex, match.index);
 
@@ -170,24 +195,15 @@ export const preprocessCustomTags = (
       `<${tagName}(?=[\\s>/])((?:"[^"]*"|'[^']*'|[^"'>])*)\\/>`,
       "gi"
     );
-    result = result.replace(
+    result = replaceOutsideCode(
+      result,
       selfClosingPattern,
-      (_match, attrs: string) => `<${tagName}${attrs}></${tagName}>`
+      (_match, attrs) => `<${tagName}${attrs}></${tagName}>`
     );
   }
 
   for (const tagName of tagNames) {
-    const closedPattern = new RegExp(
-      `(<${tagName}(?=[\\s>/])[^>]*>)([\\s\\S]*?)(</${tagName}\\s*>)`,
-      "gi"
-    );
-
-    result = result.replace(
-      closedPattern,
-      (_match, open: string, content: string, close: string) =>
-        normalizeClosedTag(open, content, close)
-    );
-
+    result = replaceTagPairsOutsideCode(result, tagName, normalizeClosedTag);
     result = normalizeUnclosedOpenTags(result, tagName);
   }
 

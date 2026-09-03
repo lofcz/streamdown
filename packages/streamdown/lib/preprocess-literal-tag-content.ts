@@ -18,6 +18,8 @@
  *   Rendered: literal `_some_username_`
  */
 
+import { replaceTagPairsOutsideCode } from "./code-ranges";
+
 // Characters that CommonMark treats as inline formatting metacharacters.
 // Only escapes characters that can trigger formatting anywhere in text:
 //   \  backslash escapes
@@ -51,14 +53,12 @@ export const preprocessLiteralTagContent = (
   let result = markdown;
 
   for (const tagName of tagNames) {
-    const pattern = new RegExp(
-      `(<${tagName}(?=[\\s>/])[^>]*>)([\\s\\S]*?)(</${tagName}\\s*>)`,
-      "gi"
-    );
-
-    result = result.replace(
-      pattern,
-      (_match, open: string, content: string, close: string) => {
+    // Tags inside fenced blocks / inline code spans are being *displayed*, not
+    // used — leave them (and everything after them) alone.
+    result = replaceTagPairsOutsideCode(
+      result,
+      tagName,
+      (open, content, close) => {
         // Escape markdown metacharacters, then replace \n\n with HTML newline
         // entities so that blank lines inside the tag do not cause the markdown
         // parser to split the tag's content across separate block tokens.

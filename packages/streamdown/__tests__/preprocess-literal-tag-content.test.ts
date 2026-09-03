@@ -86,4 +86,49 @@ describe("preprocessLiteralTagContent", () => {
     const result = preprocessLiteralTagContent(md, ["tag"]);
     expect(result).toBe("<tag>line1\nline2</tag>");
   });
+
+  describe("tags shown inside code", () => {
+    it("should ignore a tag pair inside an inline code span", () => {
+      const md = "Write `<tag>_x_</tag>` to cite.";
+      expect(preprocessLiteralTagContent(md, ["tag"])).toBe(md);
+    });
+
+    it("should ignore a tag pair inside a fenced block", () => {
+      const md = "```html\n<tag>_x_</tag>\n```";
+      expect(preprocessLiteralTagContent(md, ["tag"])).toBe(md);
+    });
+
+    it("should not let a bare tag in code swallow the following prose", () => {
+      // Regression: a model explaining its own tag syntax. The bare `<tag>` in
+      // a code span used to open a match that ran to the real close tag many
+      // lines later, escaping every `*` and backtick in between and collapsing
+      // the whole explanation into one raw-text element.
+      const md = [
+        "The `<tag>` element has **rules**:",
+        "",
+        "1. `law` is required",
+        '2. Example: `<tag law="1">§ 1 *zákona*</tag>`',
+        "",
+        'Real use: <tag law="2">§ 2 _b_</tag>.',
+      ].join("\n");
+      const result = preprocessLiteralTagContent(md, ["tag"]);
+      expect(result).toBe(
+        [
+          "The `<tag>` element has **rules**:",
+          "",
+          "1. `law` is required",
+          '2. Example: `<tag law="1">§ 1 *zákona*</tag>`',
+          "",
+          'Real use: <tag law="2">§ 2 \\_b\\_</tag>.',
+        ].join("\n")
+      );
+    });
+
+    it("should still escape a real pair that follows a fenced example", () => {
+      const md = "```\n<tag>*a*</tag>\n```\n\n<tag>*b*</tag>";
+      expect(preprocessLiteralTagContent(md, ["tag"])).toBe(
+        "```\n<tag>*a*</tag>\n```\n\n<tag>\\*b\\*</tag>"
+      );
+    });
+  });
 });
