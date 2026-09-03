@@ -560,6 +560,64 @@ describe("Markdown Components", () => {
         ).toBeTruthy();
       });
     });
+
+    it("should not invoke the render engine while the fence is incomplete", async () => {
+      const { BlockIncompleteContext } = await import(
+        "../lib/block-incomplete-context"
+      );
+      const { OpenScad } = await import("../lib/openscad");
+      const { PluginContext } = await import("../lib/plugin-context");
+      const { vi } = await import("vitest");
+
+      const renderModel = vi.fn().mockResolvedValue({
+        data: new Uint8Array([1]),
+        format: "stl",
+      });
+      const mockOpenScadPlugin = {
+        name: "openscad" as const,
+        type: "model" as const,
+        language: ["openscad", "scad"],
+        getOpenScad: vi.fn().mockReturnValue({ render: renderModel }),
+      };
+
+      // Fence still streaming: placeholder only, engine never touched
+      const { container: streaming } = render(
+        <PluginContext.Provider value={{ openscad: mockOpenScadPlugin }}>
+          <BlockIncompleteContext.Provider value={true}>
+            <OpenScad code="cube(10);" />
+          </BlockIncompleteContext.Provider>
+        </PluginContext.Provider>
+      );
+
+      await waitFor(
+        () => {
+          expect(
+            streaming.textContent?.includes("Waiting for the model code")
+          ).toBe(true);
+        },
+        { timeout: 3000 }
+      );
+      expect(renderModel).not.toHaveBeenCalled();
+
+      // Fence closed: engine renders
+      const { container: complete } = render(
+        <PluginContext.Provider value={{ openscad: mockOpenScadPlugin }}>
+          <BlockIncompleteContext.Provider value={false}>
+            <OpenScad code="cube(10);" />
+          </BlockIncompleteContext.Provider>
+        </PluginContext.Provider>
+      );
+
+      await waitFor(
+        () => {
+          expect(renderModel).toHaveBeenCalledTimes(1);
+        },
+        { timeout: 3000 }
+      );
+      expect(
+        complete.querySelector('[data-streamdown="openscad"]')
+      ).toBeTruthy();
+    });
   });
 
   describe("Table Components", () => {

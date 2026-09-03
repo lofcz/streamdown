@@ -4,6 +4,7 @@ import { StreamdownContext } from "../../index";
 import { useMermaidPlugin } from "../plugin-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { autoFixMermaidChart } from "./auto-fix";
 import { PanZoom } from "./pan-zoom";
 import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
@@ -50,6 +51,7 @@ export const Mermaid = ({
   showControls = true,
 }: MermaidProps) => {
   const cn = useCn();
+  const t = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -77,9 +79,7 @@ export const Mermaid = ({
 
     // If no mermaid plugin, show error
     if (!mermaidPlugin) {
-      setError(
-        "Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering."
-      );
+      setError(t.mermaidPluginMissing);
       return;
     }
 
@@ -113,9 +113,7 @@ export const Mermaid = ({
         // Only set error if we don't have any valid SVG
         if (!(lastValidSvg || svgContent)) {
           const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to render Mermaid chart";
+            err instanceof Error ? err.message : t.mermaidRenderFailed;
           setError(errorMessage);
         }
       } finally {
@@ -147,7 +145,7 @@ export const Mermaid = ({
               "h-4 w-4 animate-spin rounded-full border-current border-b-2"
             )}
           />
-          <span className={cn("text-sm")}>Loading diagram...</span>
+          <span className={cn("text-sm")}>{t.diagramLoading}</span>
         </div>
       </div>
     );
@@ -173,11 +171,11 @@ export const Mermaid = ({
         ref={containerRef}
       >
         <p className={cn("font-mono text-red-700 text-sm")}>
-          Mermaid Error: {error}
+          {t.mermaidErrorLabel}: {error}
         </p>
         <details className={cn("mt-2")}>
           <summary className={cn("cursor-pointer text-red-600 text-xs")}>
-            Show Code
+            {t.showCode}
           </summary>
           <pre
             className={cn(

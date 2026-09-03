@@ -1,9 +1,11 @@
 import { lazy, Suspense, useContext, useEffect, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
+import { useIsCodeFenceIncomplete } from "../block-incomplete-context";
 import { useOpenScadPlugin } from "../plugin-context";
 import type { OpenScadConfig, OpenScadRenderResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 
 const OpenScadViewer = lazy(() =>
   import("./viewer").then((mod) => ({ default: mod.OpenScadViewer }))
@@ -23,6 +25,7 @@ export const OpenScad = ({
   fullscreen = false,
 }: OpenScadProps) => {
   const cn = useCn();
+  const t = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<OpenScadRenderResult | null>(null);
@@ -32,6 +35,7 @@ export const OpenScad = ({
   const { openscad: openscadContext } = useContext(StreamdownContext);
   const openscadPlugin = useOpenScadPlugin();
   const ErrorComponent = openscadContext?.errorComponent;
+  const isBlockIncomplete = useIsCodeFenceIncomplete();
 
   const { shouldRender, containerRef } = useDeferredRender({
     immediate: fullscreen,
@@ -43,10 +47,15 @@ export const OpenScad = ({
       return;
     }
 
+    // Rendering a partial fence is pure waste: the code is invalid until
+    // the fence closes, and every attempt costs a fresh wasm instantiation
+    // (~11MB compile). Hold off until the block is complete.
+    if (isBlockIncomplete) {
+      return;
+    }
+
     if (!openscadPlugin) {
-      setError(
-        "OpenSCAD plugin not available. Please add the openscad plugin to enable model rendering."
-      );
+      setError(t.openscadPluginMissing);
       return;
     }
 
@@ -64,7 +73,7 @@ export const OpenScad = ({
         // last valid model on screen instead of flashing errors.
         if (!(lastValidResult || result)) {
           const errorMessage =
-            err instanceof Error ? err.message : "Failed to render model";
+            err instanceof Error ? err.message : t.openscadRenderFailed;
           setError(errorMessage);
         }
       } finally {
@@ -73,11 +82,40 @@ export const OpenScad = ({
     };
 
     renderModel();
-  }, [code, config, retryCount, shouldRender, openscadPlugin]);
+  }, [
+    code,
+    config,
+    retryCount,
+    shouldRender,
+    isBlockIncomplete,
+    openscadPlugin,
+    t,
+  ]);
 
   if (!(shouldRender || result || lastValidResult)) {
     return (
       <div className={cn("my-4 min-h-[200px]", className)} ref={containerRef} />
+    );
+  }
+
+  // The fence is still streaming: show a light placeholder, never the engine.
+  if (isBlockIncomplete && !result && !lastValidResult) {
+    return (
+      <div
+        className={cn("my-4 flex justify-center p-4", className)}
+        ref={containerRef}
+      >
+        <div
+          className={cn("flex items-center space-x-2 text-muted-foreground")}
+        >
+          <div
+            className={cn(
+              "h-4 w-4 animate-spin rounded-full border-current border-b-2"
+            )}
+          />
+          <span className={cn("text-sm")}>{t.openscadWriting}</span>
+        </div>
+      </div>
     );
   }
 
@@ -95,9 +133,7 @@ export const OpenScad = ({
               "h-4 w-4 animate-spin rounded-full border-current border-b-2"
             )}
           />
-          <span className={cn("text-sm")}>
-            Loading OpenSCAD engine and rendering model...
-          </span>
+          <span className={cn("text-sm")}>{t.openscadLoading}</span>
         </div>
       </div>
     );
@@ -120,11 +156,11 @@ export const OpenScad = ({
         ref={containerRef}
       >
         <p className={cn("font-mono text-red-700 text-sm")}>
-          OpenSCAD Error: {error}
+          {t.openscadErrorLabel}: {error}
         </p>
         <details className={cn("mt-2")}>
           <summary className={cn("cursor-pointer text-red-600 text-xs")}>
-            Show Code
+            {t.showCode}
           </summary>
           <pre
             className={cn(

@@ -6,6 +6,7 @@ import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "../mermaid/utils";
 import { usePlantUmlPlugin } from "../plugin-context";
 import type { PlantUmlConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 
 interface PlantUmlProps {
   chart: string;
@@ -35,6 +36,7 @@ export const PlantUml = ({
   showControls = true,
 }: PlantUmlProps) => {
   const cn = useCn();
+  const t = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -59,9 +61,7 @@ export const PlantUml = ({
     }
 
     if (!plantumlPlugin) {
-      setError(
-        "PlantUML plugin not available. Please add the plantuml plugin to enable diagram rendering."
-      );
+      setError(t.plantumlPluginMissing);
       return;
     }
 
@@ -83,9 +83,7 @@ export const PlantUml = ({
       } catch (err) {
         if (!(lastValidSvg || svgContent)) {
           const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to render PlantUML chart";
+            err instanceof Error ? err.message : t.plantumlRenderFailed;
           setError(errorMessage);
         }
       } finally {
@@ -116,7 +114,7 @@ export const PlantUml = ({
               "h-4 w-4 animate-spin rounded-full border-current border-b-2"
             )}
           />
-          <span className={cn("text-sm")}>Loading diagram...</span>
+          <span className={cn("text-sm")}>{t.diagramLoading}</span>
         </div>
       </div>
     );
@@ -139,11 +137,11 @@ export const PlantUml = ({
         ref={containerRef}
       >
         <p className={cn("font-mono text-red-700 text-sm")}>
-          PlantUML Error: {error}
+          {t.plantumlErrorLabel}: {error}
         </p>
         <details className={cn("mt-2")}>
           <summary className={cn("cursor-pointer text-red-600 text-xs")}>
-            Show Code
+            {t.showCode}
           </summary>
           <pre
             className={cn(

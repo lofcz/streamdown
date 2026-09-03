@@ -20,6 +20,8 @@ export interface StreamdownTranslations {
   copyTableAsCsv: string;
   copyTableAsMarkdown: string;
   copyTableAsTsv: string;
+  // Diagram / model renderers (Mermaid, PlantUML, OpenSCAD)
+  diagramLoading: string;
   // Mermaid
   downloadDiagram: string;
   downloadDiagramAsMmd: string;
@@ -39,18 +41,30 @@ export interface StreamdownTranslations {
   exitFullscreen: string;
   externalLinkWarning: string;
   imageNotAvailable: string;
+  mermaidErrorLabel: string;
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
   mermaidFormatSvg: string;
+  mermaidPluginMissing: string;
+  mermaidRenderFailed: string;
   openExternalLink: string;
   openLink: string;
+  openscadErrorLabel: string;
   openscadFormat3mf: string;
   openscadFormatScad: string;
   openscadFormatStl: string;
+  openscadLoading: string;
+  openscadPluginMissing: string;
+  openscadRenderFailed: string;
+  openscadWriting: string;
+  plantumlErrorLabel: string;
   plantumlFormatPng: string;
   plantumlFormatPuml: string;
   plantumlFormatSvg: string;
+  plantumlPluginMissing: string;
+  plantumlRenderFailed: string;
   resetView: string;
+  showCode: string;
   tableFormatCsv: string;
   tableFormatMarkdown: string;
   tableFormatTsv: string;
@@ -80,6 +94,23 @@ export const defaultTranslations: StreamdownTranslations = {
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",
+  // Diagram / model renderers (Mermaid, PlantUML, OpenSCAD)
+  diagramLoading: "Loading diagram...",
+  showCode: "Show Code",
+  mermaidErrorLabel: "Mermaid Error",
+  mermaidPluginMissing:
+    "Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering.",
+  mermaidRenderFailed: "Failed to render Mermaid chart",
+  plantumlErrorLabel: "PlantUML Error",
+  plantumlPluginMissing:
+    "PlantUML plugin not available. Please add the plantuml plugin to enable diagram rendering.",
+  plantumlRenderFailed: "Failed to render PlantUML chart",
+  openscadErrorLabel: "OpenSCAD Error",
+  openscadLoading: "Loading OpenSCAD engine and rendering model...",
+  openscadPluginMissing:
+    "OpenSCAD plugin not available. Please add the openscad plugin to enable model rendering.",
+  openscadRenderFailed: "Failed to render model",
+  openscadWriting: "Waiting for the model code...",
   downloadModel: "Download model",
   downloadModelAsScad: "Download model as SCAD",
   downloadModelAsStl: "Download model as STL",
