@@ -18,6 +18,13 @@ import type { CSVSeparator } from "./table/utils";
 
 export type DownloadControlConfig = boolean | { filename: string };
 
+export type CopyControlConfig =
+  | boolean
+  | {
+      onCopy?: () => void;
+      onError?: (error: Error) => void;
+    };
+
 export type ControlsConfig =
   | boolean
   | {
@@ -32,14 +39,14 @@ export type ControlsConfig =
       code?:
         | boolean
         | {
-            copy?: boolean;
+            copy?: CopyControlConfig;
             download?: DownloadControlConfig;
           };
       mermaid?:
         | boolean
         | {
             download?: DownloadControlConfig;
-            copy?: boolean;
+            copy?: CopyControlConfig;
             fullscreen?: boolean;
             panZoom?: boolean;
           };
@@ -47,7 +54,7 @@ export type ControlsConfig =
         | boolean
         | {
             download?: DownloadControlConfig;
-            copy?: boolean;
+            copy?: CopyControlConfig;
             fullscreen?: boolean;
             panZoom?: boolean;
           };
@@ -55,7 +62,7 @@ export type ControlsConfig =
         | boolean
         | {
             download?: DownloadControlConfig;
-            copy?: boolean;
+            copy?: CopyControlConfig;
             fullscreen?: boolean;
           };
       image?:
