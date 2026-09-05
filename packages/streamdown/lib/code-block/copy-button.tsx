@@ -15,6 +15,8 @@ export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
+  /** Override the default `copyCode` tooltip and aria-label. */
+  label?: string;
 };
 
 export const CodeBlockCopyButton = ({
@@ -24,6 +26,7 @@ export const CodeBlockCopyButton = ({
   children,
   className,
   code: propCode,
+  label,
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const cn = useCn();
@@ -33,6 +36,7 @@ export const CodeBlockCopyButton = ({
   const { isAnimating } = useContext(StreamdownContext);
   const t = useTranslations();
   const code = propCode ?? contextCode;
+  const copyLabel = label ?? t.copyCode;
 
   const copyToClipboard = async () => {
     if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
@@ -68,7 +72,7 @@ export const CodeBlockCopyButton = ({
   return (
     <>
       <button
-        aria-label={t.copyCode}
+        aria-label={copyLabel}
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
@@ -76,7 +80,7 @@ export const CodeBlockCopyButton = ({
         data-streamdown="code-block-copy-button"
         disabled={isAnimating}
         onClick={copyToClipboard}
-        title={t.copyCode}
+        title={copyLabel}
         type="button"
         {...props}
       >

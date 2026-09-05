@@ -57,6 +57,7 @@ export const TableFullscreenButton = ({
   return (
     <>
       <button
+        aria-label={t.viewFullscreen}
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
@@ -96,6 +97,7 @@ export const TableFullscreenButton = ({
                   {showCopy ? <TableCopyDropdown /> : null}
                   {showDownload ? <TableDownloadDropdown /> : null}
                   <button
+                    aria-label={t.exitFullscreen}
                     className={cn(
                       "rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                     )}

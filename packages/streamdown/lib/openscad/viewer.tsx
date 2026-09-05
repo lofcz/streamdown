@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { Material, Object3D } from "three";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 
 interface OpenScadViewerProps {
   className?: string;
@@ -43,6 +44,7 @@ export const OpenScadViewer = ({
   fullscreen = false,
 }: OpenScadViewerProps) => {
   const cn = useCn();
+  const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -183,7 +185,7 @@ export const OpenScadViewer = ({
 
   return (
     <div
-      aria-label="OpenSCAD model"
+      aria-label={t.openscadModel}
       className={cn(fullscreen ? "size-full" : "h-[400px] w-full", className)}
       data-streamdown="openscad-viewer"
       ref={containerRef}

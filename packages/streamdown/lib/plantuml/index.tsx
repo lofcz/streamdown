@@ -178,7 +178,7 @@ export const PlantUml = ({
         zoomStep={0.1}
       >
         <div
-          aria-label="PlantUML chart"
+          aria-label={t.plantumlChart}
           className={cn(
             "flex justify-center",
             fullscreen ? "size-full items-center" : null

@@ -92,6 +92,9 @@ export const TableDownloadButton = ({
       )}
       disabled={isAnimating}
       onClick={downloadTableData}
+      aria-label={
+        format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
+      }
       title={
         format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
       }
@@ -171,6 +174,7 @@ export const TableDownloadDropdown = ({
   return (
     <div className={cn("relative")} ref={dropdownRef}>
       <button
+        aria-label={t.downloadTable}
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
@@ -189,6 +193,7 @@ export const TableDownloadDropdown = ({
           )}
         >
           <button
+            aria-label={t.downloadTableAsCsv}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
@@ -199,6 +204,7 @@ export const TableDownloadDropdown = ({
             {t.tableFormatCsv}
           </button>
           <button
+            aria-label={t.downloadTableAsMarkdown}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}

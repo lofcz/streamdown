@@ -92,6 +92,7 @@ export const LinkSafetyModal = ({
           className={cn(
             "absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
           )}
+          aria-label={t.close}
           onClick={onClose}
           title={t.close}
           type="button"

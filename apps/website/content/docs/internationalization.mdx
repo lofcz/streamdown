@@ -20,6 +20,7 @@ Pass a partial translations object to replace specific labels:
 <Streamdown
   translations={{
     copyCode: "Copiar código",
+    copyDiagram: "Copiar diagrama",
     close: "Cerrar",
     openLink: "Abrir enlace",
     downloadImage: "Descargar imagen",
@@ -48,10 +49,69 @@ Pass a partial translations object to replace specific labels:
   }}
 />
 
+### Diagrams and models (shared)
+
+These labels are shared by Mermaid, PlantUML, and OpenSCAD controls.
+
+<TypeTable
+  type={{
+    copyDiagram: {
+      description: "Tooltip for the Mermaid and PlantUML copy buttons",
+      type: "string",
+      default: '"Copy diagram"',
+    },
+    copyModel: {
+      description: "Tooltip for the OpenSCAD copy button",
+      type: "string",
+      default: '"Copy model"',
+    },
+    diagramLoading: {
+      description: "Loading text while a diagram is rendering",
+      type: "string",
+      default: '"Loading diagram..."',
+    },
+    showCode: {
+      description: "Toggle that reveals source after a render error",
+      type: "string",
+      default: '"Show Code"',
+    },
+    viewFullscreen: {
+      description: "Open fullscreen overlay (diagrams, tables, images)",
+      type: "string",
+      default: '"View fullscreen"',
+    },
+    exitFullscreen: {
+      description: "Close fullscreen overlay",
+      type: "string",
+      default: '"Exit fullscreen"',
+    },
+    zoomIn: {
+      description: "Pan/zoom control: zoom in",
+      type: "string",
+      default: '"Zoom in"',
+    },
+    zoomOut: {
+      description: "Pan/zoom control: zoom out",
+      type: "string",
+      default: '"Zoom out"',
+    },
+    resetView: {
+      description: "Pan/zoom control: reset zoom and pan",
+      type: "string",
+      default: '"Reset zoom and pan"',
+    },
+  }}
+/>
+
 ### Mermaid diagrams
 
 <TypeTable
   type={{
+    mermaidChart: {
+      description: "Accessible name for the rendered Mermaid SVG",
+      type: "string",
+      default: '"Mermaid chart"',
+    },
     downloadDiagram: {
       description: "Label for the diagram download button",
       type: "string",
@@ -72,16 +132,6 @@ Pass a partial translations object to replace specific labels:
       type: "string",
       default: '"Download diagram as MMD"',
     },
-    viewFullscreen: {
-      description: "Toggle fullscreen button label",
-      type: "string",
-      default: '"View fullscreen"',
-    },
-    exitFullscreen: {
-      description: "Exit fullscreen button label",
-      type: "string",
-      default: '"Exit fullscreen"',
-    },
     mermaidFormatSvg: {
       description: "Short format label for SVG",
       type: "string",
@@ -96,6 +146,172 @@ Pass a partial translations object to replace specific labels:
       description: "Short format label for MMD",
       type: "string",
       default: '"MMD"',
+    },
+    mermaidErrorLabel: {
+      description: "Prefix shown before a Mermaid render error",
+      type: "string",
+      default: '"Mermaid Error"',
+    },
+    mermaidPluginMissing: {
+      description: "Error when the Mermaid plugin is not installed",
+      type: "string",
+      default: '"Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering."',
+    },
+    mermaidRenderFailed: {
+      description: "Fallback when Mermaid rendering fails without an error message",
+      type: "string",
+      default: '"Failed to render Mermaid chart"',
+    },
+  }}
+/>
+
+### PlantUML diagrams
+
+<TypeTable
+  type={{
+    plantumlChart: {
+      description: "Accessible name for the rendered PlantUML SVG",
+      type: "string",
+      default: '"PlantUML chart"',
+    },
+    downloadDiagramAsPuml: {
+      description: "Download diagram as PlantUML option",
+      type: "string",
+      default: '"Download diagram as PlantUML"',
+    },
+    plantumlFormatSvg: {
+      description: "Short format label for SVG",
+      type: "string",
+      default: '"SVG"',
+    },
+    plantumlFormatPng: {
+      description: "Short format label for PNG",
+      type: "string",
+      default: '"PNG"',
+    },
+    plantumlFormatPuml: {
+      description: "Short format label for PlantUML source",
+      type: "string",
+      default: '"PUML"',
+    },
+    plantumlErrorLabel: {
+      description: "Prefix shown before a PlantUML render error",
+      type: "string",
+      default: '"PlantUML Error"',
+    },
+    plantumlPluginMissing: {
+      description: "Error when the PlantUML plugin is not installed",
+      type: "string",
+      default: '"PlantUML plugin not available. Please add the plantuml plugin to enable diagram rendering."',
+    },
+    plantumlRenderFailed: {
+      description: "Fallback when PlantUML rendering fails without an error message",
+      type: "string",
+      default: '"Failed to render PlantUML chart"',
+    },
+  }}
+/>
+
+### OpenSCAD models
+
+<TypeTable
+  type={{
+    openscadModel: {
+      description: "Accessible name for the 3D model viewer",
+      type: "string",
+      default: '"OpenSCAD model"',
+    },
+    downloadModel: {
+      description: "Label for the model download button",
+      type: "string",
+      default: '"Download model"',
+    },
+    downloadModelAsScad: {
+      description: "Download model as SCAD option",
+      type: "string",
+      default: '"Download model as SCAD"',
+    },
+    downloadModelAsStl: {
+      description: "Download model as STL option",
+      type: "string",
+      default: '"Download model as STL"',
+    },
+    downloadModelAs3mf: {
+      description: "Download model as 3MF option",
+      type: "string",
+      default: '"Download model as 3MF"',
+    },
+    openscadFormatScad: {
+      description: "Short format label for SCAD",
+      type: "string",
+      default: '"SCAD"',
+    },
+    openscadFormatStl: {
+      description: "Short format label for STL",
+      type: "string",
+      default: '"STL"',
+    },
+    openscadFormat3mf: {
+      description: "Short format label for 3MF",
+      type: "string",
+      default: '"3MF"',
+    },
+    openscadLoading: {
+      description: "Loading text while the OpenSCAD engine is compiling",
+      type: "string",
+      default: '"Loading OpenSCAD engine and rendering model..."',
+    },
+    openscadWriting: {
+      description: "Placeholder while the OpenSCAD fence is still streaming",
+      type: "string",
+      default: '"Waiting for the model code..."',
+    },
+    openscadErrorLabel: {
+      description: "Prefix shown before an OpenSCAD render error",
+      type: "string",
+      default: '"OpenSCAD Error"',
+    },
+    openscadPluginMissing: {
+      description: "Error when the OpenSCAD plugin is not installed",
+      type: "string",
+      default: '"OpenSCAD plugin not available. Please add the openscad plugin to enable model rendering."',
+    },
+    openscadRenderFailed: {
+      description: "Fallback when OpenSCAD rendering fails without an error message",
+      type: "string",
+      default: '"Failed to render model"',
+    },
+  }}
+/>
+
+### GitHub alerts
+
+<TypeTable
+  type={{
+    alertNote: {
+      description: "Title for `[!NOTE]` alerts",
+      type: "string",
+      default: '"Note"',
+    },
+    alertTip: {
+      description: "Title for `[!TIP]` alerts",
+      type: "string",
+      default: '"Tip"',
+    },
+    alertImportant: {
+      description: "Title for `[!IMPORTANT]` alerts",
+      type: "string",
+      default: '"Important"',
+    },
+    alertWarning: {
+      description: "Title for `[!WARNING]` alerts",
+      type: "string",
+      default: '"Warning"',
+    },
+    alertCaution: {
+      description: "Title for `[!CAUTION]` alerts",
+      type: "string",
+      default: '"Caution"',
     },
   }}
 />
@@ -262,6 +478,6 @@ import type { StreamdownTranslations } from "streamdown";
 import { defaultTranslations, useTranslations } from "streamdown";
 ```
 
-- `StreamdownTranslations` — interface with all 37 translation keys
+- `StreamdownTranslations` — interface with every built-in UI label
 - `defaultTranslations` — the built-in English defaults
 - `useTranslations()` — React hook returning the active translations object
