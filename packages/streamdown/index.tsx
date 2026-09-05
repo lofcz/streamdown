@@ -11,6 +11,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
@@ -26,6 +27,7 @@ import {
   createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
+import { createBlockKeyTracker } from "./lib/block-keys";
 import { components as defaultComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
@@ -853,13 +855,13 @@ export const Streamdown = memo(
       [blocksToRender, dir]
     );
 
-    // Generate stable keys based on index only
-    // Don't use content hash - that causes unmount/remount when content changes
-    // React will handle content updates via props changes and memo comparison
-    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
+    // Keys follow blocks by content (see createBlockKeyTracker): stable
+    // across token appends AND across head inserts/removes, so nodes below
+    // an edit keep their identity instead of being rewritten in place.
+    const [trackBlockKeys] = useState(() => createBlockKeyTracker(generatedId));
     const blockKeys = useMemo(
-      () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
-      [blocksToRender.length, generatedId]
+      () => trackBlockKeys(blocksToRender),
+      [blocksToRender, trackBlockKeys]
     );
 
     // Stable key derived from translations values so inline objects don't
