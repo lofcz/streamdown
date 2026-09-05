@@ -133,6 +133,7 @@ export type {
   ScrollableComponent,
   ScrollableProps,
   StreamdownContextType,
+  TableCopyFormat,
 } from "./lib/streamdown-context";
 export { StreamdownContext } from "./lib/streamdown-context";
 export {

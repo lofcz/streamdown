@@ -94,6 +94,8 @@ describe("getCopyCallbacks", () => {
     expect(getCopyCallbacks({ mermaid: { copy: true } }, "mermaid")).toEqual(
       {}
     );
+    expect(getCopyCallbacks({ table: { copy: true } }, "table")).toEqual({});
+    expect(getCopyCallbacks({ table: { copy: false } }, "table")).toEqual({});
   });
 
   it("returns onCopy and onError from copy config", () => {
@@ -111,6 +113,9 @@ describe("getCopyCallbacks", () => {
     ).toEqual({ onCopy, onError });
     expect(
       getCopyCallbacks({ openscad: { copy: { onCopy, onError } } }, "openscad")
+    ).toEqual({ onCopy, onError });
+    expect(
+      getCopyCallbacks({ table: { copy: { onCopy, onError } } }, "table")
     ).toEqual({ onCopy, onError });
   });
 

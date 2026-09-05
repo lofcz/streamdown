@@ -1,7 +1,9 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { getCopyCallbacks } from "../controls";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import type { TableCopyFormat } from "../streamdown-context";
 import { useTranslations } from "../translations-context";
 import {
   extractTableDataFromElement,
@@ -14,7 +16,7 @@ import {
 export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
-  onCopy?: (format: "csv" | "tsv" | "md") => void;
+  onCopy?: (format: TableCopyFormat) => void;
   onError?: (error: Error) => void;
   timeout?: number;
 }
@@ -34,10 +36,13 @@ export const TableCopyDropdown = ({
   const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const csvSeparator = getTableCsvSeparator(controls);
+  const copyCallbacks = getCopyCallbacks(controls, "table");
+  const handleCopy = onCopy ?? copyCallbacks.onCopy;
+  const handleError = onError ?? copyCallbacks.onError;
 
-  const copyTableData = async (format: "csv" | "tsv" | "md") => {
+  const copyTableData = async (format: TableCopyFormat) => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
-      onError?.(new Error("Clipboard API not available"));
+      handleError?.(new Error("Clipboard API not available"));
       return;
     }
 
@@ -50,7 +55,7 @@ export const TableCopyDropdown = ({
       ) as HTMLTableElement;
 
       if (!tableElement) {
-        onError?.(new Error("Table not found"));
+        handleError?.(new Error("Table not found"));
         return;
       }
 
@@ -75,10 +80,10 @@ export const TableCopyDropdown = ({
       await navigator.clipboard.write([clipboardItemData]);
       setIsCopied(true);
       setIsOpen(false);
-      onCopy?.(format);
+      handleCopy?.(format);
       timeoutRef.current = window.setTimeout(() => setIsCopied(false), timeout);
     } catch (error) {
-      onError?.(error as Error);
+      handleError?.(error as Error);
     }
   };
 

@@ -63,7 +63,7 @@ CSV copy and download use a comma by default. Customize the delimiter with `cont
 
 Every code block includes a copy button that appears on hover. The copy button will be shown for code blocks in the top-right corner on hover. The copy button will copy the raw code without syntax highlighting. It will also show a checkmark for 2 seconds after successful copy. It will be disabled during streaming to prevent copying incomplete code.
 
-To hook the default copy button without replacing the control, pass callbacks through `controls.code.copy` (the same shape works for `mermaid`, `plantuml`, and `openscad`):
+To hook a default copy control without replacing it, pass `{ onCopy, onError }` through `controls.*.copy`. That shape works for `code`, `mermaid`, `plantuml`, `openscad`, and `table` (table `onCopy` receives the chosen `"csv" | "tsv" | "md"` format):
 
 ```tsx
 <Streamdown

@@ -1,4 +1,14 @@
-import type { ControlsConfig } from "./streamdown-context";
+import type { ControlsConfig, TableCopyFormat } from "./streamdown-context";
+
+interface CodeCopyCallbacks {
+  onCopy?: () => void;
+  onError?: (error: Error) => void;
+}
+
+interface TableCopyCallbacks {
+  onCopy?: (format: TableCopyFormat) => void;
+  onError?: (error: Error) => void;
+}
 
 export const getDownloadFilename = (
   config: ControlsConfig,
@@ -22,10 +32,18 @@ export const getDownloadFilename = (
   return downloadConfig.filename || fallback;
 };
 
-export const getCopyCallbacks = (
+export function getCopyCallbacks(
+  config: ControlsConfig,
+  type: "table"
+): TableCopyCallbacks;
+export function getCopyCallbacks(
   config: ControlsConfig,
   type: "code" | "mermaid" | "plantuml" | "openscad"
-): { onCopy?: () => void; onError?: (error: Error) => void } => {
+): CodeCopyCallbacks;
+export function getCopyCallbacks(
+  config: ControlsConfig,
+  type: "code" | "mermaid" | "plantuml" | "openscad" | "table"
+): CodeCopyCallbacks | TableCopyCallbacks {
   if (typeof config === "boolean") {
     return {};
   }
@@ -44,4 +62,4 @@ export const getCopyCallbacks = (
     onCopy: copyConfig.onCopy,
     onError: copyConfig.onError,
   };
-};
+}

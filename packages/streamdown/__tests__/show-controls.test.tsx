@@ -22,6 +22,62 @@ graph TD
 \`\`\`
 `;
 
+  const markdownWithPlantuml = `
+\`\`\`plantuml
+Alice -> Bob : hello
+\`\`\`
+`;
+
+  const markdownWithOpenscad = `
+\`\`\`openscad
+cube(10);
+\`\`\`
+`;
+
+  const mockMermaidPlugin = {
+    name: "mermaid" as const,
+    type: "diagram" as const,
+    language: "mermaid",
+    getMermaid: () => ({
+      initialize: vi.fn(),
+      render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+    }),
+  };
+
+  const mockPlantUmlPlugin = {
+    name: "plantuml" as const,
+    type: "diagram" as const,
+    language: ["plantuml", "puml"],
+    getPlantUml: vi.fn().mockReturnValue({
+      render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+    }),
+  };
+
+  const mockOpenScadPlugin = {
+    name: "openscad" as const,
+    type: "model" as const,
+    language: ["openscad", "scad"],
+    getOpenScad: vi.fn().mockReturnValue({
+      render: vi.fn().mockResolvedValue({
+        data: new Uint8Array([1, 2, 3]),
+        format: "stl",
+      }),
+    }),
+  };
+
+  const clickDefaultCopyButton = async (container: HTMLElement) => {
+    const button = await waitFor(() => {
+      const copyBtn = container.querySelector(
+        '[data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyBtn).toBeTruthy();
+      expect(copyBtn?.hasAttribute("disabled")).toBe(false);
+      return copyBtn as HTMLButtonElement;
+    });
+    fireEvent.click(button);
+    return button;
+  };
+
   describe("boolean configuration", () => {
     it("should show all controls by default", () => {
       const { container } = render(
@@ -128,16 +184,6 @@ graph TD
     });
 
     it("should hide only mermaid controls when mermaid is false", async () => {
-      const mockMermaidPlugin = {
-        name: "mermaid" as const,
-        type: "diagram" as const,
-        language: "mermaid",
-        getMermaid: () => ({
-          initialize: vi.fn(),
-          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
-        }),
-      };
-
       const { container } = render(
         <Streamdown
           controls={{ mermaid: false }}
@@ -215,16 +261,6 @@ ${markdownWithCode}
     });
 
     it("should hide mermaid pan-zoom controls when panZoom is false", async () => {
-      const mockMermaidPlugin = {
-        name: "mermaid" as const,
-        type: "diagram" as const,
-        language: "mermaid",
-        getMermaid: () => ({
-          initialize: vi.fn(),
-          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
-        }),
-      };
-
       const mermaidWithControls = `
 \`\`\`mermaid
 graph TD
@@ -248,16 +284,6 @@ graph TD
     });
 
     it("should show mermaid pan-zoom controls by default", async () => {
-      const mockMermaidPlugin = {
-        name: "mermaid" as const,
-        type: "diagram" as const,
-        language: "mermaid",
-        getMermaid: () => ({
-          initialize: vi.fn(),
-          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
-        }),
-      };
-
       const mermaidContent = `
 \`\`\`mermaid
 graph TD
@@ -560,6 +586,195 @@ graph TD
         );
         expect(copyBtn).toBeTruthy();
       });
+    });
+
+    it("should wire onCopy from mermaid.copy config", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown
+          controls={{ mermaid: { copy: { onCopy } } }}
+          plugins={{ mermaid: mockMermaidPlugin }}
+        >
+          {markdownWithMermaid}
+        </Streamdown>
+      );
+
+      await clickDefaultCopyButton(container);
+
+      await waitFor(() => {
+        expect(onCopy).toHaveBeenCalled();
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should wire onCopy from plantuml.copy config", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown
+          controls={{ plantuml: { copy: { onCopy } } }}
+          plugins={{ plantuml: mockPlantUmlPlugin }}
+        >
+          {markdownWithPlantuml}
+        </Streamdown>
+      );
+
+      await clickDefaultCopyButton(container);
+
+      await waitFor(() => {
+        expect(onCopy).toHaveBeenCalled();
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should wire onCopy from openscad.copy config", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown
+          controls={{ openscad: { copy: { onCopy } } }}
+          plugins={{ openscad: mockOpenScadPlugin }}
+        >
+          {markdownWithOpenscad}
+        </Streamdown>
+      );
+
+      await clickDefaultCopyButton(container);
+
+      await waitFor(() => {
+        expect(onCopy).toHaveBeenCalled();
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should wire onCopy from table.copy config", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+      const originalClipboardItem = globalThis.ClipboardItem;
+
+      globalThis.ClipboardItem = class ClipboardItem {
+        data: Record<string, Blob>;
+        constructor(data: Record<string, Blob>) {
+          this.data = data;
+        }
+      } as unknown as typeof ClipboardItem;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          write: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container, getByText } = render(
+        <Streamdown controls={{ table: { copy: { onCopy } } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const copyBtn = container.querySelector('button[title="Copy table"]');
+      expect(copyBtn).toBeTruthy();
+      fireEvent.click(copyBtn as HTMLButtonElement);
+      fireEvent.click(getByText("Markdown"));
+
+      await waitFor(() => {
+        expect(onCopy).toHaveBeenCalledWith("md");
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+      globalThis.ClipboardItem = originalClipboardItem;
+    });
+
+    it("should wire onError from table.copy config when clipboard is unavailable", async () => {
+      const onError = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { container, getByText } = render(
+        <Streamdown controls={{ table: { copy: { onError } } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const copyBtn = container.querySelector('button[title="Copy table"]');
+      expect(copyBtn).toBeTruthy();
+      fireEvent.click(copyBtn as HTMLButtonElement);
+      fireEvent.click(getByText("Markdown"));
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(expect.any(Error));
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should still show table copy when copy is an object config", () => {
+      const { container } = render(
+        <Streamdown controls={{ table: { copy: { onCopy: () => undefined } } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      expect(
+        container.querySelector('button[title="Copy table"]')
+      ).toBeTruthy();
     });
   });
 
