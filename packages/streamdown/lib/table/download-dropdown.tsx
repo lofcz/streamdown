@@ -86,15 +86,15 @@ export const TableDownloadButton = ({
 
   return (
     <button
+      aria-label={
+        format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
+      }
       className={cn(
         "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       disabled={isAnimating}
       onClick={downloadTableData}
-      aria-label={
-        format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
-      }
       title={
         format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
       }
