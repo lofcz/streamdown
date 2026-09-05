@@ -14,7 +14,10 @@ export interface StreamdownTranslations {
   copied: string;
   // Code block
   copyCode: string;
+  // Diagram / model copy
+  copyDiagram: string;
   copyLink: string;
+  copyModel: string;
   // Table
   copyTable: string;
   copyTableAsCsv: string;
@@ -41,6 +44,7 @@ export interface StreamdownTranslations {
   exitFullscreen: string;
   externalLinkWarning: string;
   imageNotAvailable: string;
+  mermaidChart: string;
   mermaidErrorLabel: string;
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
@@ -54,9 +58,11 @@ export interface StreamdownTranslations {
   openscadFormatScad: string;
   openscadFormatStl: string;
   openscadLoading: string;
+  openscadModel: string;
   openscadPluginMissing: string;
   openscadRenderFailed: string;
   openscadWriting: string;
+  plantumlChart: string;
   plantumlErrorLabel: string;
   plantumlFormatPng: string;
   plantumlFormatPuml: string;
@@ -82,8 +88,11 @@ export const defaultTranslations: StreamdownTranslations = {
   alertCaution: "Caution",
   // Code block
   copyCode: "Copy Code",
+  copyDiagram: "Copy diagram",
+  copyModel: "Copy model",
   downloadFile: "Download file",
   // Mermaid
+  mermaidChart: "Mermaid chart",
   downloadDiagram: "Download diagram",
   downloadDiagramAsSvg: "Download diagram as SVG",
   downloadDiagramAsPng: "Download diagram as PNG",
@@ -101,11 +110,13 @@ export const defaultTranslations: StreamdownTranslations = {
   mermaidPluginMissing:
     "Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering.",
   mermaidRenderFailed: "Failed to render Mermaid chart",
+  plantumlChart: "PlantUML chart",
   plantumlErrorLabel: "PlantUML Error",
   plantumlPluginMissing:
     "PlantUML plugin not available. Please add the plantuml plugin to enable diagram rendering.",
   plantumlRenderFailed: "Failed to render PlantUML chart",
   openscadErrorLabel: "OpenSCAD Error",
+  openscadModel: "OpenSCAD model",
   openscadLoading: "Loading OpenSCAD engine and rendering model...",
   openscadPluginMissing:
     "OpenSCAD plugin not available. Please add the openscad plugin to enable model rendering.",

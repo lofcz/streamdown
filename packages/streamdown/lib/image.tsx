@@ -266,6 +266,7 @@ export const ImageComponent = ({
               "absolute right-2 bottom-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background",
               "opacity-0 focus-visible:opacity-100 group-hover/image:opacity-100"
             )}
+            aria-label={t.downloadImage}
             onClick={downloadImage}
             title={t.downloadImage}
             type="button"
@@ -296,6 +297,7 @@ export const ImageComponent = ({
                 className={cn(
                   "absolute top-4 right-4 z-10 rounded-md p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                 )}
+                aria-label={t.exitFullscreen}
                 onClick={closeLightbox}
                 title={t.exitFullscreen}
                 type="button"

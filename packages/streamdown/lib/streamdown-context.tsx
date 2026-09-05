@@ -18,10 +18,12 @@ import type { CSVSeparator } from "./table/utils";
 
 export type DownloadControlConfig = boolean | { filename: string };
 
-export type CopyControlConfig =
+export type TableCopyFormat = "csv" | "tsv" | "md";
+
+export type CopyControlConfig<TOnCopy = () => void> =
   | boolean
   | {
-      onCopy?: () => void;
+      onCopy?: TOnCopy;
       onError?: (error: Error) => void;
     };
 
@@ -31,7 +33,7 @@ export type ControlsConfig =
       table?:
         | boolean
         | {
-            copy?: boolean;
+            copy?: CopyControlConfig<(format: TableCopyFormat) => void>;
             csvSeparator?: CSVSeparator;
             download?: DownloadControlConfig;
             fullscreen?: boolean;

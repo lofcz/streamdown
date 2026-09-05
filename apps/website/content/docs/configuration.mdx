@@ -386,7 +386,10 @@ The `controls` prop can be configured granularly. Set a block type to `false` to
 <Streamdown
   controls={{
     table: {
-      copy: true, // Show table copy button
+      copy: {
+        onCopy: (format) => announce(`Copied ${format}`),
+        onError: (error) => toast.error(error.message),
+      },
       download: { filename: "report" }, // Download as report.csv / report.md
       fullscreen: true, // Show table fullscreen button
       csvSeparator: ",", // "," | ";" | "\t" | "auto"
@@ -400,15 +403,29 @@ The `controls` prop can be configured granularly. Set a block type to `false` to
     },
     mermaid: {
       download: { filename: "flowchart" }, // Download as flowchart.svg / flowchart.png / flowchart.mmd
-      copy: true, // Show mermaid copy button
+      copy: {
+        onCopy: () => announce("Copied"),
+        onError: (error) => toast.error(error.message),
+      },
       fullscreen: true, // Show mermaid fullscreen button
       panZoom: true, // Show mermaid pan/zoom controls
     },
     plantuml: {
       download: { filename: "sequence" }, // Download as sequence.svg / sequence.png / sequence.puml
-      copy: true,
+      copy: {
+        onCopy: () => announce("Copied"),
+        onError: (error) => toast.error(error.message),
+      },
       fullscreen: true,
       panZoom: true,
+    },
+    openscad: {
+      download: { filename: "model" },
+      copy: {
+        onCopy: () => announce("Copied"),
+        onError: (error) => toast.error(error.message),
+      },
+      fullscreen: true,
     },
   }}
 >
@@ -416,7 +433,7 @@ The `controls` prop can be configured granularly. Set a block type to `false` to
 </Streamdown>
 ```
 
-You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid, and `diagram.svg` / `diagram.png` / `diagram.puml` for PlantUML.
+You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid, `diagram.svg` / `diagram.png` / `diagram.puml` for PlantUML, and `model.scad` / `model.stl` / `model.3mf` for OpenSCAD.
 
 ### Remend Options
 

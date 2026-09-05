@@ -20,7 +20,12 @@ const markdownWithTable = `
 describe("defaultTranslations", () => {
   it("should export defaultTranslations with all required keys", () => {
     expect(defaultTranslations.copyCode).toBe("Copy Code");
+    expect(defaultTranslations.copyDiagram).toBe("Copy diagram");
+    expect(defaultTranslations.copyModel).toBe("Copy model");
     expect(defaultTranslations.downloadFile).toBe("Download file");
+    expect(defaultTranslations.mermaidChart).toBe("Mermaid chart");
+    expect(defaultTranslations.plantumlChart).toBe("PlantUML chart");
+    expect(defaultTranslations.openscadModel).toBe("OpenSCAD model");
     expect(defaultTranslations.downloadDiagram).toBe("Download diagram");
     expect(defaultTranslations.downloadDiagramAsSvg).toBe(
       "Download diagram as SVG"
@@ -151,6 +156,65 @@ describe("Streamdown translations prop", () => {
         '[data-streamdown="code-block-download-button"]'
       );
       expect(downloadButton?.getAttribute("title")).toBe("Download file");
+    });
+  });
+});
+
+const markdownWithMermaid = `
+\`\`\`mermaid
+graph TD
+    A-->B
+\`\`\`
+`;
+
+const mockMermaidPlugin = {
+  name: "mermaid" as const,
+  type: "diagram" as const,
+  language: "mermaid",
+  getMermaid: () => ({
+    initialize: () => undefined,
+    render: () => Promise.resolve({ svg: "<svg>Test</svg>" }),
+  }),
+};
+
+describe("diagram and model translations", () => {
+  it("should use copyDiagram for mermaid copy button", async () => {
+    const { container } = render(
+      <Streamdown plugins={{ mermaid: mockMermaidPlugin }}>
+        {markdownWithMermaid}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const copyButton = container.querySelector(
+        '[data-streamdown="mermaid-block-actions"] [data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyButton?.getAttribute("title")).toBe("Copy diagram");
+      expect(copyButton?.getAttribute("aria-label")).toBe("Copy diagram");
+    });
+  });
+
+  it("should override mermaid copy and chart labels", async () => {
+    const { container } = render(
+      <Streamdown
+        plugins={{ mermaid: mockMermaidPlugin }}
+        translations={{
+          copyDiagram: "Copiar diagrama",
+          mermaidChart: "Gráfico Mermaid",
+        }}
+      >
+        {markdownWithMermaid}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const copyButton = container.querySelector(
+        '[data-streamdown="mermaid-block-actions"] [data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyButton?.getAttribute("title")).toBe("Copiar diagrama");
+
+      const chart = container.querySelector('[aria-label="Gráfico Mermaid"]');
+      expect(chart).toBeTruthy();
     });
   });
 });

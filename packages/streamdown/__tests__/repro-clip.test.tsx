@@ -190,14 +190,18 @@ A tohle je další odstavec, který musí zůstat viditelný.`;
       state = parseMarkdownIntoBlocksIncremental(slice, state);
       const blocks = state.blocks.slice();
 
-      if (
-        prevBlocks &&
-        blocks.length > 1 &&
-        prevBlocks.length === blocks.length
-      ) {
-        // All blocks except the last must be identical strings (settled).
-        for (let j = 0; j < blocks.length - 1; j += 1) {
-          expect(blocks[j]).toBe(prevBlocks[j]);
+      if (prevBlocks) {
+        // Only blocks that ended with a blank line and had two later blocks
+        // are reused by identity; the last two (or more) can still be re-lexed.
+        let stableCount = 0;
+        for (let i = prevBlocks.length - 3; i >= 0; i -= 1) {
+          if (prevBlocks.at(i)?.endsWith("\n\n")) {
+            stableCount = i + 1;
+            break;
+          }
+        }
+        for (let j = 0; j < stableCount; j += 1) {
+          expect(blocks.at(j)).toBe(prevBlocks.at(j));
         }
       }
 
@@ -223,9 +227,8 @@ A tohle je další odstavec, který musí zůstat viditelný.`;
       );
     }
 
-    // Once we have 2+ blocks, settled prefix is never re-lexed.
-    // The first block settles at i = first "\n\n", so subsequent appends
-    // should only lex the tail. Verify lexCalls is bounded by tail length.
+    // Once a blank-line prefix has two blocks after it, that prefix is never
+    // re-lexed. lexCalls stays bounded by the number of prefixes, not worse.
     expect(lexCalls).toBeLessThanOrEqual(full.length);
   });
 });

@@ -218,7 +218,7 @@ export const Mermaid = ({
         zoomStep={0.1}
       >
         <div
-          aria-label="Mermaid chart"
+          aria-label={t.mermaidChart}
           className={cn(
             "flex justify-center",
             fullscreen ? "size-full items-center" : null

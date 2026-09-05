@@ -133,6 +133,7 @@ export type {
   ScrollableComponent,
   ScrollableProps,
   StreamdownContextType,
+  TableCopyFormat,
 } from "./lib/streamdown-context";
 export { StreamdownContext } from "./lib/streamdown-context";
 export {
@@ -155,7 +156,10 @@ export {
   tableDataToTSV,
 } from "./lib/table/utils";
 export type { StreamdownTranslations } from "./lib/translations-context";
-export { defaultTranslations } from "./lib/translations-context";
+export {
+  defaultTranslations,
+  useTranslations,
+} from "./lib/translations-context";
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)
