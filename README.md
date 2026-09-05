@@ -6,7 +6,8 @@ This is a fork of [Streamdown](https://github.com/vercel/streamdown) by [Vercel]
 
 
 ## Key Changes
-- Merged in contributions from many PRs upstream; where possible the original commits were left in the history.
-- Performance improvements.
-- Extended GFM support.
-- Bug fixes.
+- Merged in contributions from many PRs upstream; where possible the original commits were left in the history
+- Performance improvements
+- Extended GFM support
+- PlantUML, OpenSCAD built-in plugins
+- Bug fixes
