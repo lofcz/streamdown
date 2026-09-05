@@ -134,6 +134,11 @@ With `dir="auto"`:
       type: "Pluggable[]",
       default: "Object.values(defaultRemarkPlugins)",
     },
+    disableAutolinkProtocols: {
+      description:
+        "Disable GFM autolinking for specific URL protocols (e.g. ['mailto'] stops bare email addresses from becoming links). Accepts protocol names with or without a trailing colon, case-insensitive. Only affects literal autolinks created by remark-gfm; explicit [text](url) links are unaffected.",
+      type: "string[]",
+    },
   }}
 />
 
@@ -202,6 +207,11 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
     plugins: {
       description: "Plugin configuration for math, mermaid, code highlighting, and CJK support. See [Plugins](/docs/plugins).",
       type: "PluginConfig",
+    },
+    disableAutolinkProtocols: {
+      description:
+        "Disable GFM autolinking for specific URL protocols (e.g. `['mailto']` stops bare email addresses from becoming links). Accepts protocol names with or without a trailing colon, case-insensitive. Only affects literal autolinks created by remark-gfm; explicit `[text](url)` links are unaffected.",
+      type: "string[]",
     },
     icons: {
       description:
@@ -370,7 +380,7 @@ import { Streamdown, defaultUrlTransform } from 'streamdown';
   }}
 />
 
-The `controls` prop can be configured granularly. Set a block type to `false` to hide all of its buttons, or pass an object to toggle individual actions. For downloads, pass `{ filename: "customName" }` to set a custom base filename — the file extension is added automatically.
+The `controls` prop can be configured granularly. Set a block type to `false` to hide all of its buttons, or pass an object to toggle individual actions. For downloads, pass `{ filename: "customName" }` to set a custom base filename — the file extension is added automatically. For default-rendered copy buttons, pass `{ onCopy, onError }` instead of a boolean to hook success and clipboard-failure events without replacing the control.
 
 ```tsx title="app/page.tsx"
 <Streamdown
@@ -382,7 +392,10 @@ The `controls` prop can be configured granularly. Set a block type to `false` to
       csvSeparator: ",", // "," | ";" | "\t" | "auto"
     },
     code: {
-      copy: true, // Show code copy button
+      copy: {
+        onCopy: () => announce("Copied"),
+        onError: (error) => toast.error(error.message),
+      },
       download: { filename: "myScript" }, // Download as myScript.js, myScript.py, etc.
     },
     mermaid: {

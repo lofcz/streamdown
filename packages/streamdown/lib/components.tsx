@@ -20,6 +20,7 @@ import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
+import { getCopyCallbacks } from "./controls";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
@@ -1136,6 +1137,7 @@ const CodeComponent = ({
   const plantumlPlugin = usePlantUmlPlugin();
   const openscadPlugin = useOpenScadPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
+  const t = useTranslations();
 
   const match = className?.match(LANGUAGE_REGEX);
   const language = match?.at(1) ?? "";
@@ -1241,7 +1243,13 @@ const CodeComponent = ({
                     config={mermaidContext?.config}
                   />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={code}
+                    label={t.copyDiagram}
+                    {...getCopyCallbacks(controlsConfig, "mermaid")}
+                  />
+                ) : null}
                 {showFullscreen ? (
                   <MermaidFullscreenButton
                     chart={code}
@@ -1318,7 +1326,13 @@ const CodeComponent = ({
                     config={plantumlContext?.config}
                   />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={code}
+                    label={t.copyDiagram}
+                    {...getCopyCallbacks(controlsConfig, "plantuml")}
+                  />
+                ) : null}
                 {showFullscreen ? (
                   <PlantUmlFullscreenButton
                     chart={code}
@@ -1387,7 +1401,13 @@ const CodeComponent = ({
                     config={openscadContext?.config}
                   />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={code}
+                    label={t.copyModel}
+                    {...getCopyCallbacks(controlsConfig, "openscad")}
+                  />
+                ) : null}
                 {showFullscreen ? (
                   <OpenScadFullscreenButton
                     code={code}
@@ -1428,7 +1448,11 @@ const CodeComponent = ({
           {showDownload ? (
             <CodeBlockDownloadButton code={code} language={language} />
           ) : null}
-          {showCopy ? <CodeBlockCopyButton /> : null}
+          {showCopy ? (
+            <CodeBlockCopyButton
+              {...getCopyCallbacks(controlsConfig, "code")}
+            />
+          ) : null}
         </>
       ) : null}
     </CodeBlock>
