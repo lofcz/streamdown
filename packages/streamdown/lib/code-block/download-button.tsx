@@ -7,7 +7,10 @@ import { useTranslations } from "../translations-context";
 import { save } from "../utils";
 import { useCodeBlockContext } from "./context";
 
-export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
+export type CodeBlockDownloadButtonProps = Omit<
+  ComponentProps<"button">,
+  "onError"
+> & {
   onDownload?: () => void;
   onError?: (error: Error) => void;
 };

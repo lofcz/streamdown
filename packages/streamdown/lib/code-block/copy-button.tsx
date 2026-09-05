@@ -11,7 +11,10 @@ import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import { useCodeBlockContext } from "./context";
 
-export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
+export type CodeBlockCopyButtonProps = Omit<
+  ComponentProps<"button">,
+  "onCopy" | "onError"
+> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
