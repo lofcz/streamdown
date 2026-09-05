@@ -1,5 +1,51 @@
 # streamdown
 
+## 2.14.0
+
+### Minor Changes
+
+- efa1f5e: Wire `{ onCopy, onError }` copy callbacks through every default-rendered copy control, including tables, PlantUML, and OpenSCAD.
+
+  `controls.table.copy` can now be `{ onCopy, onError }` in addition to a boolean. Table `onCopy` receives the chosen format (`"csv" | "tsv" | "md"`). Diagram and model copy buttons already accepted the same object shape as `controls.code.copy`.
+
+- 7f71155: Allow `controls.code.copy`, `controls.mermaid.copy`, `controls.plantuml.copy`, and `controls.openscad.copy` to be `{ onCopy, onError }` so default-rendered copy buttons can report success and clipboard failures.
+
+  ```tsx
+  <Streamdown
+    controls={{
+      code: {
+        copy: {
+          onCopy: () => announce("Copied"),
+          onError: (error) => toast.error(error.message),
+        },
+      },
+    }}
+  >
+    {markdown}
+  </Streamdown>
+  ```
+
+  Boolean `copy` values still work. Closes vercel/streamdown#557.
+
+- 7f71155: Add a `disableAutolinkProtocols` prop to `<Streamdown>` for disabling GFM autolinking of specific URL protocols (e.g. `mailto`).
+
+  ```tsx
+  <Streamdown disableAutolinkProtocols={["mailto"]}>
+    {"Contact us at hello@example.com"}
+  </Streamdown>
+  ```
+
+  Bare emails and bare URLs whose protocol matches the list (case-insensitive, `"mailto"` and `"mailto:"` are equivalent) are unwrapped back to plain text. Explicit markdown links (`[text](mailto:...)`) are left as links. When the prop is omitted, autolinking behavior is completely unchanged.
+
+  Closes vercel/streamdown#607.
+
+- 3b713da: Localize remaining interactive UI: Mermaid/PlantUML/OpenSCAD copy labels and chart `aria-label`s, plus matching `aria-label`s on table, image, and link-modal controls. `useTranslations` is now exported.
+
+### Patch Changes
+
+- db08f80: Fix TypeScript conflict between custom copy/download `onError` callbacks and the native button `onError` / `onCopy` event types so the package builds.
+- 0ab2dbc: Speed up block parsing by lexing only block tokens, and settle streamed prefix blocks only after a blank-line boundary that cannot still change (`#x`, `2.`, setext underlines).
+
 ## 2.13.3
 
 ### Patch Changes
